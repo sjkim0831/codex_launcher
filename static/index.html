@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Carbonet Codex Launcher</title>
+    <link rel="stylesheet" href="/static/app.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <p class="eyebrow">Carbonet</p>
+          <h1>Codex Launcher</h1>
+          <p class="muted">workspace, quick action, free prompt를 한 곳에서 실행</p>
+        </div>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Workspace</h2>
+          </div>
+          <div id="workspace-list" class="workspace-list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Accounts</h2>
+            <button id="refresh-accounts" class="ghost-button" type="button">Refresh</button>
+          </div>
+          <div class="field-row compact">
+            <label for="account-label">Save Current Login</label>
+            <input id="account-label" type="text" placeholder="예: 개인 ChatGPT, 회사 API Key">
+          </div>
+          <div class="button-row">
+            <button id="save-current-account" class="secondary-button" type="button">Save Current</button>
+            <button id="start-login" class="secondary-button" type="button">Login</button>
+            <button id="logout-login" class="ghost-button" type="button">Logout</button>
+          </div>
+          <div id="login-help" class="muted">Login은 device code를 발급하고 인증 페이지를 새 창으로 엽니다.</div>
+          <div id="current-account" class="muted"></div>
+          <div id="account-list" class="workspace-list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Jobs</h2>
+            <button id="refresh-jobs" class="ghost-button" type="button">Refresh</button>
+          </div>
+          <div id="job-list" class="job-list"></div>
+        </section>
+      </aside>
+
+      <main class="main">
+        <section class="hero">
+          <div>
+            <p class="eyebrow">Local Console</p>
+            <h2>Codex exec와 프로젝트 명령을 같은 런처에서 관리</h2>
+          </div>
+          <div class="status-bar">
+            <div class="status-pill">
+              <span>Codex</span>
+              <strong id="codex-version">checking...</strong>
+            </div>
+            <div class="status-pill">
+              <span>FreeAgent</span>
+              <strong id="freeagent-model">checking...</strong>
+            </div>
+            <div class="status-pill">
+              <span>Login</span>
+              <strong id="login-status">checking...</strong>
+            </div>
+            <div class="status-pill">
+              <span>Runtime</span>
+              <strong id="runtime-context">checking...</strong>
+            </div>
+            <button id="refresh-login" class="ghost-button" type="button">Login Check</button>
+          </div>
+        </section>
+
+        <section class="panel browser-panel">
+          <div class="panel-head">
+            <h2>Real Browser</h2>
+            <span id="browser-status" class="muted">확장 대기 중</span>
+          </div>
+          <div class="browser-toolbar">
+            <input id="browser-address" type="text" placeholder="예: http://localhost:18000/admin/system/codex-request">
+            <button id="open-browser-inline" class="primary-button" type="button">Open Real Tab</button>
+            <button id="open-browser-popup" class="secondary-button" type="button">Open Popup</button>
+            <button id="browser-use-current" class="ghost-button" type="button">주소 가져오기</button>
+          </div>
+          <div class="browser-extension-box">
+            <p id="browser-note" class="muted inline-note">Chrome/Edge에 확장을 Load unpacked 한 뒤 실제 18000 페이지에서 우클릭하면 선택 요소가 Codex Prompt로 자동 적재됩니다.</p>
+            <div class="browser-extension-meta">
+              <div class="browser-extension-item">
+                <strong>Load unpacked path</strong>
+                <code id="browser-extension-path"></code>
+              </div>
+              <div class="browser-extension-item">
+                <strong>Manifest</strong>
+                <a id="browser-extension-link" href="/extension/manifest.json" target="_blank" rel="noreferrer">/extension/manifest.json</a>
+              </div>
+            </div>
+            <p id="browser-current-url" class="muted">최근 보고 주소 없음</p>
+          </div>
+        </section>
+
+        <section class="reference-grid">
+          <div class="panel reference-panel">
+            <div class="panel-head">
+              <h2>Theme Reference</h2>
+              <span id="reference-root" class="muted"></span>
+            </div>
+            <div class="field-row compact">
+              <label for="reference-root-select">Theme Roots</label>
+              <select id="reference-root-select"></select>
+            </div>
+            <div class="root-register-grid">
+              <input id="reference-root-label" type="text" placeholder="테마 루트 라벨">
+              <input id="reference-root-path" type="text" placeholder="예: /opt/reference/theme">
+            </div>
+            <div class="button-row">
+              <button id="reference-root-browse" class="ghost-button" type="button">Browse</button>
+              <button id="reference-root-add" class="secondary-button" type="button">Add Root</button>
+              <button id="reference-root-delete" class="ghost-button" type="button">Delete Root</button>
+            </div>
+            <div class="field-row compact">
+              <label for="reference-section-select">Section</label>
+              <select id="reference-section-select">
+                <option value="screen">screen</option>
+                <option value="board">board</option>
+              </select>
+            </div>
+            <div class="field-row compact">
+              <label for="reference-project-select">Theme Project</label>
+              <select id="reference-project-select"></select>
+            </div>
+            <div class="field-row compact">
+              <label for="reference-folder-select">Theme Folder</label>
+              <select id="reference-folder-select"></select>
+            </div>
+            <div id="reference-status" class="muted">레퍼런스 폴더 확인 중</div>
+            <pre id="reference-theme-tree" class="theme-tree">theme root를 기준으로 트리 구조를 표시합니다.</pre>
+            <div id="reference-tree" class="reference-tree"></div>
+          </div>
+
+          <div class="panel reference-preview-panel">
+            <div class="panel-head">
+              <h2>Reference Preview</h2>
+              <span id="reference-selected" class="muted">선택된 파일 없음</span>
+            </div>
+            <div class="button-row">
+              <button id="insert-reference-context" class="secondary-button" type="button">프롬프트에 추가</button>
+              <button id="compose-reference-migration" class="primary-button" type="button">마이그레이션 프롬프트 생성</button>
+            </div>
+            <div id="reference-preview-meta" class="muted inline-note">`code.html` 또는 `screen.png`를 선택하세요.</div>
+            <iframe id="reference-html-preview" class="reference-html-preview" title="HTML preview"></iframe>
+            <img id="reference-image-preview" class="reference-image-preview" alt="reference preview">
+            <pre id="reference-text-preview" class="console-output reference-text-preview">선택한 HTML 소스 일부가 여기에 표시됩니다.</pre>
+          </div>
+        </section>
+
+        <section class="project-grid">
+          <div class="panel project-panel">
+            <div class="panel-head">
+              <h2>Project Folder</h2>
+              <span id="project-root" class="muted"></span>
+            </div>
+            <div class="field-row compact">
+              <label for="project-root-select">Registered Roots</label>
+              <select id="project-root-select"></select>
+            </div>
+            <div class="root-register-grid">
+              <input id="project-root-label" type="text" placeholder="루트 라벨">
+              <input id="project-root-path" type="text" placeholder="예: /opt/projects">
+            </div>
+            <div class="button-row">
+              <button id="project-root-browse" class="ghost-button" type="button">Browse</button>
+              <button id="project-root-add" class="secondary-button" type="button">Add Root</button>
+              <button id="project-root-delete" class="ghost-button" type="button">Delete Root</button>
+            </div>
+            <div class="field-row compact">
+              <label for="project-search">Project Find</label>
+              <input id="project-search" type="text" placeholder="예: carbonet, carbosys">
+            </div>
+            <div id="project-search-results" class="project-search-results"></div>
+            <div id="project-status" class="muted">프로젝트 폴더 확인 중</div>
+            <div id="project-list" class="workspace-list"></div>
+          </div>
+
+          <div class="panel project-actions-panel">
+            <div class="panel-head">
+              <h2>Project Actions</h2>
+              <span class="reference-badge">target</span>
+            </div>
+            <div class="project-target-card">
+              <div class="project-target-label muted">Selected Project</div>
+              <code id="project-selected">선택된 폴더 없음</code>
+              <div id="project-summary" class="muted">`/opt/projects` 하위 폴더를 선택하세요.</div>
+            </div>
+            <div class="project-action-grid">
+              <button id="project-one-click" class="primary-button project-one-click" type="button">One Click Build + Restart</button>
+              <button id="project-build-frontend" class="secondary-button" type="button">Frontend Build</button>
+              <button id="project-package-backend" class="secondary-button" type="button">Backend Package</button>
+              <button id="project-restart-18000" class="ghost-button" type="button">Restart 18000</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="reference-grid">
+          <div class="panel project-panel">
+            <div class="panel-head">
+              <h2>Project Menus</h2>
+              <span id="project-menu-source" class="muted">메뉴 스캔 전</span>
+            </div>
+            <div class="button-row">
+              <button id="project-scan-menus" class="secondary-button" type="button">Scan Menus</button>
+              <button id="project-use-menu-context" class="ghost-button" type="button">프롬프트에 메뉴 추가</button>
+            </div>
+            <div class="field-row compact">
+              <label for="project-menu-group">Menu Group</label>
+              <select id="project-menu-group">
+                <option value="home">home</option>
+                <option value="admin">admin</option>
+              </select>
+            </div>
+            <div id="project-menu-tree" class="reference-tree"></div>
+          </div>
+
+          <div class="panel reference-preview-panel">
+            <div class="panel-head">
+              <h2>Menu Mapping</h2>
+              <span id="project-menu-selected" class="muted">선택된 메뉴 없음</span>
+            </div>
+            <pre id="project-menu-preview" class="theme-tree">메뉴를 선택하면 경로와 매핑 정보가 표시됩니다.</pre>
+          </div>
+        </section>
+
+        <section class="quick-grid">
+          <div class="panel action-panel">
+            <div class="panel-head">
+              <h2>Quick Actions</h2>
+              <span id="selected-action-caption" class="muted">버튼을 선택하세요</span>
+            </div>
+            <div id="action-grid" class="action-grid"></div>
+          </div>
+
+          <div class="panel composer-panel">
+            <div class="panel-head">
+              <h2>Composer</h2>
+              <span id="workspace-caption" class="muted"></span>
+            </div>
+
+            <div class="field-row">
+              <label for="assistant-cli">AI CLI</label>
+              <select id="assistant-cli"></select>
+            </div>
+
+            <div class="field-row">
+              <label for="custom-codex-prompt">AI Prompt</label>
+              <textarea id="custom-codex-prompt" placeholder="실행할 Codex 또는 FreeAgent 프롬프트를 입력하세요"></textarea>
+            </div>
+
+            <div class="field-row">
+              <label for="custom-shell-command">Shell Command</label>
+              <input id="custom-shell-command" type="text" placeholder="예: git status --short">
+            </div>
+
+            <div class="field-row">
+              <label for="extra-input">Extra Input</label>
+              <textarea id="extra-input" placeholder="선택한 quick action에 덧붙일 추가 입력"></textarea>
+            </div>
+
+            <div class="button-row">
+              <button id="run-selected-action" class="primary-button" type="button">Run Selected Action</button>
+              <button id="run-custom-codex" class="secondary-button" type="button">Run AI Prompt</button>
+              <button id="run-custom-shell" class="secondary-button" type="button">Run Custom Shell</button>
+              <button id="cancel-job" class="ghost-button" type="button">Cancel Current Job</button>
+            </div>
+
+            <p id="assistant-note" class="muted inline-note">기본 모델은 선택된 CLI 환경설정을 따릅니다.</p>
+          </div>
+        </section>
+
+        <section class="console-grid">
+          <div class="panel output-panel">
+            <div class="panel-head">
+              <h2>Command</h2>
+              <span id="job-meta" class="muted">실행 전</span>
+            </div>
+            <pre id="command-preview" class="command-preview">아직 실행된 작업이 없습니다.</pre>
+          </div>
+
+          <div class="panel output-panel">
+            <div class="panel-head">
+              <h2>Codex Final</h2>
+            </div>
+            <pre id="final-output" class="console-output">Codex 최종 응답이 여기에 표시됩니다.</pre>
+          </div>
+
+          <div class="panel output-panel wide">
+            <div class="panel-head">
+              <h2>Raw Output</h2>
+            </div>
+            <pre id="raw-output" class="console-output">실행 로그가 여기에 표시됩니다.</pre>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>

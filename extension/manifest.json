@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Carbonet Codex Bridge",
+  "version": "0.1.0",
+  "description": "Capture real Carbonet browser context and forward it to the Codex launcher.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:18000/*",
+    "http://localhost:18000/*",
+    "http://127.0.0.1:43110/*",
+    "http://localhost:43110/*"
+  ],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://127.0.0.1:18000/*",
+        "http://localhost:18000/*"
+      ],
+      "all_frames": true,
+      "match_about_blank": true,
+      "js": [
+        "content-script.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "icons": {}
+}

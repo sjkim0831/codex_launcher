@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "freeagent-ultra"
+version = "0.4.0"
+description = "Local coding agent CLI with plan-approve-apply-verify loop"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "typer>=0.12.3",
+  "rich>=13.7.1",
+  "pydantic>=2.8.2",
+  "requests>=2.32.3",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.2",
+]
+
+[project.scripts]
+freeagent = "freeagent.cli:app"
+
+[tool.setuptools.packages.find]
+include = ["freeagent*"]

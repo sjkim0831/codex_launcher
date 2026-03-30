@@ -1,0 +1,2 @@
+[console_scripts]
+freeagent = freeagent.cli:app

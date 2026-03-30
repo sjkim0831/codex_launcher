@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+FREEAGENT_HOME="$SCRIPT_DIR/vendors/freeagent_ultra"
+VENV_DIR="$SCRIPT_DIR/runtime/freeagent-venv"
+
+if [[ ! -d "$FREEAGENT_HOME/freeagent" ]]; then
+  echo "FreeAgent source not found: $FREEAGENT_HOME" >&2
+  exit 1
+fi
+
+if [[ ! -x "$VENV_DIR/bin/python" ]]; then
+  echo "FreeAgent venv not found: $VENV_DIR" >&2
+  exit 1
+fi
+
+export PYTHONPATH="$FREEAGENT_HOME${PYTHONPATH:+:$PYTHONPATH}"
+STATE_KEY="$(pwd | tr '/ :' '___')"
+export FREEAGENT_STATE_ROOT="${FREEAGENT_STATE_ROOT:-/tmp/carbonet-freeagent-state/${USER:-user}/$STATE_KEY}"
+exec "$VENV_DIR/bin/python" -m freeagent.cli "$@"

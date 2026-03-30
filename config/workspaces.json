@@ -1,0 +1,33 @@
+{
+  "defaultWorkspaceId": "carbonet-root",
+  "workspaces": [
+    {
+      "id": "carbonet-root",
+      "label": "Carbonet Root",
+      "description": "Spring Boot, React, ops 전체 기준 작업공간",
+      "path": "/opt/projects/carbonet",
+      "defaultSandbox": "workspace-write"
+    },
+    {
+      "id": "carbonet-frontend",
+      "label": "Frontend",
+      "description": "React migration 전용 작업공간",
+      "path": "/opt/projects/carbonet/frontend",
+      "defaultSandbox": "workspace-write"
+    },
+    {
+      "id": "carbonet-ops",
+      "label": "Ops Scripts",
+      "description": "ops/scripts, 운영 보조 스크립트 기준",
+      "path": "/opt/projects/carbonet/ops",
+      "defaultSandbox": "workspace-write"
+    },
+    {
+      "id": "carbonet-docs",
+      "label": "Docs",
+      "description": "handoff, architecture, AI 문서 기준",
+      "path": "/opt/projects/carbonet/docs",
+      "defaultSandbox": "workspace-write"
+    }
+  ]
+}

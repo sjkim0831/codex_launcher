@@ -1,0 +1,92 @@
+{
+  "actions": [
+    {
+      "id": "codex-login-status",
+      "label": "Codex Login",
+      "group": "ops",
+      "kind": "shell",
+      "description": "현재 Codex 로그인 상태 확인",
+      "shell": "codex login status",
+      "workspaceScoped": false
+    },
+    {
+      "id": "git-status",
+      "label": "Git Status",
+      "group": "repo",
+      "kind": "shell",
+      "description": "현재 workspace의 git 상태 요약",
+      "shell": "git status --short"
+    },
+    {
+      "id": "git-diff-stat",
+      "label": "Diff Stat",
+      "group": "repo",
+      "kind": "shell",
+      "description": "변경 파일 통계 확인",
+      "shell": "git diff --stat"
+    },
+    {
+      "id": "backend-package",
+      "label": "Backend Package",
+      "group": "build",
+      "kind": "shell",
+      "description": "백엔드 패키징 검증",
+      "shell": "mvn -q -DskipTests package",
+      "workspaceId": "carbonet-root"
+    },
+    {
+      "id": "frontend-build",
+      "label": "Frontend Build",
+      "group": "build",
+      "kind": "shell",
+      "description": "frontend 빌드 검증",
+      "shell": "npm run build",
+      "workspaceId": "carbonet-frontend"
+    },
+    {
+      "id": "freeagent-doctor",
+      "label": "FreeAgent Doctor",
+      "group": "freeagent",
+      "kind": "shell",
+      "description": "vendored FreeAgent 런타임 상태 확인",
+      "shell": "/opt/util/codex/bin/carbonet-freeagent doctor",
+      "workspaceId": "carbonet-root"
+    },
+    {
+      "id": "freeagent-inspect",
+      "label": "FreeAgent Inspect",
+      "group": "freeagent",
+      "kind": "shell",
+      "description": "현재 workspace 구조를 FreeAgent 기준으로 분석",
+      "shell": "/opt/util/codex/bin/carbonet-freeagent inspect",
+      "workspaceId": "carbonet-root"
+    },
+    {
+      "id": "codex-structure-summary",
+      "label": "Structure Summary",
+      "group": "codex",
+      "kind": "codex",
+      "description": "선택 workspace 구조와 주요 진입점을 요약",
+      "promptTemplate": "현재 작업공간 구조, 핵심 진입점, 자주 건드리는 경로를 짧게 요약해줘.",
+      "fullAuto": true
+    },
+    {
+      "id": "codex-change-review",
+      "label": "Change Review",
+      "group": "codex",
+      "kind": "codex",
+      "description": "현재 변경사항 기준 위험도 높은 이슈 리뷰",
+      "promptTemplate": "현재 작업공간 기준으로 코드 리뷰를 해줘. 버그, 회귀 위험, 테스트 누락을 심각도 순으로 정리해줘.",
+      "fullAuto": true
+    },
+    {
+      "id": "codex-build-debug",
+      "label": "Build Debug",
+      "group": "codex",
+      "kind": "codex",
+      "description": "빌드 실패 원인 분석용 프롬프트",
+      "promptTemplate": "현재 작업공간에서 최근 빌드 실패 원인을 찾고, 가장 가능성 높은 수정 포인트를 제안해줘.",
+      "fullAuto": true
+    }
+  ]
+}
