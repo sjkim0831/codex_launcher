@@ -83,6 +83,9 @@ class JobRecord:
     job_id: str
     title: str
     kind: str
+    session_id: str
+    session_title: str
+    plan_step: str
     workspace_id: str
     workspace_label: str
     cwd: str
@@ -102,6 +105,9 @@ class JobRecord:
             "jobId": self.job_id,
             "title": self.title,
             "kind": self.kind,
+            "sessionId": self.session_id,
+            "sessionTitle": self.session_title,
+            "planStep": self.plan_step,
             "workspaceId": self.workspace_id,
             "workspaceLabel": self.workspace_label,
             "cwd": self.cwd,
@@ -126,10 +132,13 @@ class LauncherApp:
         self.data_root = app_root / "data"
         self.jobs_root = self.data_root / "jobs"
         self.accounts_root = self.data_root / "accounts"
+        self.sessions_root = self.data_root / "sessions"
         self.history_file = self.data_root / "job-history.jsonl"
         self.source_roots_file = self.data_root / "source-roots.json"
+        self.current_session_file = self.data_root / "current-session.txt"
         self.jobs_root.mkdir(parents=True, exist_ok=True)
         self.accounts_root.mkdir(parents=True, exist_ok=True)
+        self.sessions_root.mkdir(parents=True, exist_ok=True)
         self.data_root.mkdir(parents=True, exist_ok=True)
         self.lock = threading.Lock()
         self.workspaces_doc = read_json(self.config_root / "workspaces.json")
@@ -152,9 +161,12 @@ class LauncherApp:
             "menuSnapshot": {},
         }
         self.source_roots = self.load_source_roots()
+        self.ensure_default_session()
+        self.load_persisted_jobs()
 
     def bootstrap(self) -> dict[str, Any]:
         login = self.login_status()
+        current_session = self.current_session()
         return {
             "defaultWorkspaceId": self.workspaces_doc.get("defaultWorkspaceId", ""),
             "workspaces": self.workspaces_doc.get("workspaces", []),
@@ -175,7 +187,557 @@ class LauncherApp:
             "reference": self.reference_status(),
             "projectRoots": self.list_roots("project"),
             "referenceRoots": self.list_roots("reference"),
+            "sessions": self.list_sessions(),
+            "currentSessionId": current_session.get("id", ""),
+            "currentSession": current_session,
         }
+
+    def session_path(self, session_id: str) -> Path:
+        return self.sessions_root / session_id / "session.json"
+
+    def job_record_path(self, job_id: str) -> Path:
+        return self.jobs_root / f"{job_id}.json"
+
+    def legacy_output_file(self, job_id: str) -> Path:
+        return self.jobs_root / f"{job_id}-final.txt"
+
+    def recover_legacy_job_output(self, job_id: str, command_preview: str) -> tuple[str, str]:
+        output_file = self.legacy_output_file(job_id)
+        if output_file.exists():
+            text = output_file.read_text(encoding="utf-8").strip()
+            return text, str(output_file)
+        preview = self.summarize_text(command_preview, 400)
+        return preview, ""
+
+    def create_session_doc(
+        self,
+        title: str,
+        workspace_id: str = "",
+        project_path: str = "",
+    ) -> dict[str, Any]:
+        session_id = uuid.uuid4().hex[:12]
+        now = now_iso()
+        return {
+            "id": session_id,
+            "title": title.strip() or f"Session {now}",
+            "parentSessionId": "",
+            "workspaceId": workspace_id,
+            "projectPath": project_path,
+            "createdAt": now,
+            "updatedAt": now,
+            "lastJobId": "",
+            "summary": "",
+            "notes": "",
+            "plan": [],
+            "recentJobs": [],
+        }
+
+    def load_session(self, session_id: str) -> dict[str, Any]:
+        path = self.session_path(session_id)
+        if not path.exists():
+            raise ValueError(f"Unknown session: {session_id}")
+        return read_json(path)
+
+    def save_session(self, session_doc: dict[str, Any]) -> dict[str, Any]:
+        session_doc["updatedAt"] = now_iso()
+        path = self.session_path(safe_text(session_doc.get("id")))
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("w", encoding="utf-8") as handle:
+            json.dump(session_doc, handle, ensure_ascii=False, indent=2)
+        return session_doc
+
+    def current_session_id(self) -> str:
+        if self.current_session_file.exists():
+            session_id = self.current_session_file.read_text(encoding="utf-8").strip()
+            if session_id and self.session_path(session_id).exists():
+                return session_id
+        sessions = self.list_sessions()
+        if sessions:
+            session_id = safe_text(sessions[0].get("id"))
+            if session_id:
+                self.current_session_file.write_text(session_id, encoding="utf-8")
+                return session_id
+        session = self.save_session(self.create_session_doc("Default Session"))
+        self.current_session_file.write_text(session["id"], encoding="utf-8")
+        return session["id"]
+
+    def current_session(self) -> dict[str, Any]:
+        return self.load_session(self.current_session_id())
+
+    def ensure_legacy_session(self) -> dict[str, Any]:
+        session_id = "legacy-history"
+        path = self.session_path(session_id)
+        if path.exists():
+            return read_json(path)
+        now = now_iso()
+        session = {
+            "id": session_id,
+            "title": "Legacy History",
+            "parentSessionId": "",
+            "workspaceId": "",
+            "projectPath": "",
+            "createdAt": now,
+            "updatedAt": now,
+            "lastJobId": "",
+            "summary": "Pre-session historical jobs restored from job-history.jsonl",
+            "notes": "Pre-session historical jobs restored from job-history.jsonl",
+            "plan": [],
+            "recentJobs": [],
+        }
+        return self.save_session(session)
+
+    def load_persisted_jobs(self) -> None:
+        loaded_ids: set[str] = set()
+        for path in sorted(self.jobs_root.glob("*.json")):
+            try:
+                doc = read_json(path)
+            except Exception:
+                continue
+            status = safe_text(doc.get("status")) or "failed"
+            ended_at = safe_text(doc.get("endedAt"))
+            error = safe_text(doc.get("error"))
+            if status == "running":
+                status = "failed"
+                ended_at = ended_at or now_iso()
+                error = error or "Launcher restarted before the job finished."
+            job = JobRecord(
+                job_id=safe_text(doc.get("jobId")),
+                title=safe_text(doc.get("title")),
+                kind=safe_text(doc.get("kind")),
+                session_id=safe_text(doc.get("sessionId")),
+                session_title=safe_text(doc.get("sessionTitle")),
+                plan_step=safe_text(doc.get("planStep")),
+                workspace_id=safe_text(doc.get("workspaceId")),
+                workspace_label=safe_text(doc.get("workspaceLabel")),
+                cwd=safe_text(doc.get("cwd")),
+                command_preview=safe_text(doc.get("commandPreview")),
+                status=status,
+                started_at=safe_text(doc.get("startedAt")) or now_iso(),
+                ended_at=ended_at,
+                exit_code=doc.get("exitCode"),
+                output=safe_text(doc.get("output")),
+                final_message=safe_text(doc.get("finalMessage")),
+                error=error,
+                output_file=safe_text(doc.get("outputFile")),
+            )
+            if job.job_id:
+                self.jobs[job.job_id] = job
+                loaded_ids.add(job.job_id)
+        if not self.history_file.exists():
+            return
+        legacy_session = self.ensure_legacy_session()
+        for raw in self.history_file.read_text(encoding="utf-8").splitlines():
+            if not raw.strip():
+                continue
+            try:
+                doc = json.loads(raw)
+            except Exception:
+                continue
+            job_id = safe_text(doc.get("jobId"))
+            if not job_id or job_id in loaded_ids:
+                continue
+            session_id = safe_text(doc.get("sessionId")) or safe_text(legacy_session.get("id"))
+            session_title = safe_text(doc.get("sessionTitle")) or (
+                safe_text(legacy_session.get("title")) if session_id == legacy_session.get("id") else ""
+            )
+            job = JobRecord(
+                job_id=job_id,
+                title=safe_text(doc.get("title")),
+                kind=safe_text(doc.get("kind")),
+                session_id=session_id,
+                session_title=session_title,
+                plan_step=safe_text(doc.get("planStep")),
+                workspace_id=safe_text(doc.get("workspaceId")),
+                workspace_label=safe_text(doc.get("workspaceLabel")),
+                cwd="",
+                command_preview=safe_text(doc.get("commandPreview")),
+                status=safe_text(doc.get("status")) or "failed",
+                started_at=safe_text(doc.get("startedAt")) or now_iso(),
+                ended_at=safe_text(doc.get("endedAt")),
+                exit_code=doc.get("exitCode"),
+                output="",
+                final_message="",
+                error="",
+                output_file="",
+            )
+            recovered_output, recovered_file = self.recover_legacy_job_output(job_id, job.command_preview)
+            job.final_message = recovered_output
+            job.output = recovered_output
+            job.output_file = recovered_file
+            self.jobs[job.job_id] = job
+            loaded_ids.add(job.job_id)
+
+    def ensure_default_session(self) -> None:
+        self.current_session_id()
+
+    def list_sessions(self) -> list[dict[str, Any]]:
+        items: list[dict[str, Any]] = []
+        active_id = ""
+        if self.current_session_file.exists():
+            active_id = self.current_session_file.read_text(encoding="utf-8").strip()
+        for session_path in sorted(self.sessions_root.glob("*/session.json")):
+            try:
+                item = read_json(session_path)
+            except Exception:
+                continue
+            item["isActive"] = safe_text(item.get("id")) == active_id
+            items.append(item)
+        items.sort(key=lambda item: safe_text(item.get("updatedAt")), reverse=True)
+        return items
+
+    def create_session(
+        self,
+        title: str,
+        workspace_id: str = "",
+        project_path: str = "",
+    ) -> dict[str, Any]:
+        session = self.save_session(self.create_session_doc(title, workspace_id, project_path))
+        self.current_session_file.write_text(session["id"], encoding="utf-8")
+        return {
+            "session": session,
+            "items": self.list_sessions(),
+            "currentSessionId": session["id"],
+        }
+
+    def create_branch_session(self, session_id: str, title: str = "") -> dict[str, Any]:
+        source = self.load_session(session_id)
+        branch_title = title.strip() or f"{safe_text(source.get('title'))} / branch"
+        session = self.create_session_doc(
+            branch_title,
+            safe_text(source.get("workspaceId")),
+            safe_text(source.get("projectPath")),
+        )
+        session["parentSessionId"] = safe_text(source.get("id"))
+        session["notes"] = safe_text(source.get("notes"))
+        session["plan"] = list(source.get("plan", []))
+        session["recentJobs"] = list(source.get("recentJobs", []))
+        session["lastJobId"] = safe_text(source.get("lastJobId"))
+        session["summary"] = safe_text(source.get("summary"))
+        self.save_session(session)
+        self.current_session_file.write_text(session["id"], encoding="utf-8")
+        return {
+            "session": session,
+            "items": self.list_sessions(),
+            "currentSessionId": session["id"],
+        }
+
+    def update_session(
+        self,
+        session_id: str,
+        title: str | None = None,
+        notes: str | None = None,
+        plan: list[dict[str, Any]] | None = None,
+        workspace_id: str | None = None,
+        project_path: str | None = None,
+    ) -> dict[str, Any]:
+        session = self.load_session(session_id)
+        if title is not None:
+            clean_title = safe_text(title).strip()
+            if clean_title:
+                session["title"] = clean_title
+        if notes is not None:
+            session["notes"] = safe_text(notes).strip()
+        if plan is not None:
+            normalized_plan: list[dict[str, str]] = []
+            for item in plan:
+                step = safe_text(item.get("step")).strip()
+                if not step:
+                    continue
+                status = safe_text(item.get("status")).strip() or "pending"
+                if status not in {"pending", "in_progress", "completed"}:
+                    status = "pending"
+                normalized_plan.append({"step": step, "status": status})
+            session["plan"] = normalized_plan
+        if workspace_id is not None:
+            session["workspaceId"] = safe_text(workspace_id).strip()
+        if project_path is not None:
+            session["projectPath"] = safe_text(project_path).strip()
+        self.refresh_session_summary(session)
+        self.save_session(session)
+        return {
+            "session": session,
+            "items": self.list_sessions(),
+            "currentSessionId": self.current_session_id(),
+        }
+
+    def activate_session(self, session_id: str) -> dict[str, Any]:
+        session = self.load_session(session_id)
+        self.current_session_file.write_text(session["id"], encoding="utf-8")
+        return {
+            "session": session,
+            "items": self.list_sessions(),
+            "currentSessionId": session["id"],
+        }
+
+    def compare_session(self, session_id: str) -> dict[str, Any]:
+        session = self.load_session(session_id)
+        parent_id = safe_text(session.get("parentSessionId")).strip()
+        if not parent_id:
+            return {
+                "sessionId": session_id,
+                "hasParent": False,
+                "message": "No parent session.",
+            }
+        parent = self.load_session(parent_id)
+        session_plan = session.get("plan", [])
+        parent_plan = parent.get("plan", [])
+        session_plan_map = {safe_text(item.get("step")): safe_text(item.get("status")) for item in session_plan}
+        parent_plan_map = {safe_text(item.get("step")): safe_text(item.get("status")) for item in parent_plan}
+        changed_steps: list[dict[str, str]] = []
+        for step in sorted(set(parent_plan_map) | set(session_plan_map)):
+            parent_status = parent_plan_map.get(step, "")
+            session_status = session_plan_map.get(step, "")
+            if parent_status != session_status:
+                changed_steps.append(
+                    {
+                        "step": step,
+                        "parentStatus": parent_status,
+                        "sessionStatus": session_status,
+                    }
+                )
+        parent_jobs = {safe_text(item.get("jobId")) for item in parent.get("recentJobs", [])}
+        new_jobs = [
+            item
+            for item in session.get("recentJobs", [])
+            if safe_text(item.get("jobId")) not in parent_jobs
+        ]
+        parent_notes_lines = [
+            line.strip()
+            for line in safe_text(parent.get("notes")).splitlines()
+            if line.strip()
+        ]
+        session_notes_lines = [
+            line.strip()
+            for line in safe_text(session.get("notes")).splitlines()
+            if line.strip()
+        ]
+        notes_added = [line for line in session_notes_lines if line not in parent_notes_lines]
+        notes_removed = [line for line in parent_notes_lines if line not in session_notes_lines]
+        return {
+            "sessionId": session_id,
+            "hasParent": True,
+            "parentSessionId": parent_id,
+            "parentTitle": safe_text(parent.get("title")),
+            "sessionTitle": safe_text(session.get("title")),
+            "notesChanged": safe_text(parent.get("notes")).strip() != safe_text(session.get("notes")).strip(),
+            "parentNotes": safe_text(parent.get("notes")),
+            "sessionNotes": safe_text(session.get("notes")),
+            "notesAdded": notes_added,
+            "notesRemoved": notes_removed,
+            "changedSteps": changed_steps,
+            "newJobs": new_jobs,
+        }
+
+    def session_family(self, session_id: str) -> dict[str, Any]:
+        session = self.load_session(session_id)
+        parent_id = safe_text(session.get("parentSessionId")).strip()
+        if parent_id:
+            root = self.load_session(parent_id)
+        else:
+            root = session
+            parent_id = safe_text(root.get("id"))
+        siblings = []
+        for item in self.list_sessions():
+            if safe_text(item.get("id")) == safe_text(root.get("id")):
+                continue
+            if safe_text(item.get("parentSessionId")) == safe_text(root.get("id")):
+                siblings.append(
+                    {
+                        "id": safe_text(item.get("id")),
+                        "title": safe_text(item.get("title")),
+                        "isCurrent": safe_text(item.get("id")) == safe_text(session.get("id")),
+                    }
+                )
+        return {
+            "sessionId": safe_text(session.get("id")),
+            "currentTitle": safe_text(session.get("title")),
+            "parent": {
+                "id": safe_text(root.get("id")),
+                "title": safe_text(root.get("title")),
+                "isCurrent": safe_text(root.get("id")) == safe_text(session.get("id")),
+            },
+            "siblings": siblings,
+        }
+
+    def resolve_session(self, payload: dict[str, Any], workspace: dict[str, Any]) -> dict[str, Any]:
+        session_id = safe_text(payload.get("sessionId")).strip()
+        if session_id:
+            session = self.load_session(session_id)
+        else:
+            session = self.current_session()
+        session["workspaceId"] = safe_text(workspace.get("id")) or safe_text(session.get("workspaceId"))
+        project_path = safe_text(payload.get("projectPath")).strip()
+        if project_path:
+            session["projectPath"] = project_path
+        self.save_session(session)
+        self.current_session_file.write_text(session["id"], encoding="utf-8")
+        return session
+
+    def summarize_text(self, text: str, limit: int = 280) -> str:
+        collapsed = re.sub(r"\s+", " ", safe_text(text)).strip()
+        if len(collapsed) <= limit:
+            return collapsed
+        return collapsed[: limit - 3].rstrip() + "..."
+
+    def refresh_session_summary(self, session_doc: dict[str, Any]) -> None:
+        recent_jobs = session_doc.get("recentJobs", [])
+        lines: list[str] = []
+        notes = self.summarize_text(safe_text(session_doc.get("notes")), 220)
+        if notes:
+            lines.append(f"Notes: {notes}")
+        plan_items = session_doc.get("plan", [])
+        if plan_items:
+            compact = ", ".join(
+                f"{safe_text(item.get('step'))} [{safe_text(item.get('status')) or 'pending'}]"
+                for item in plan_items[:5]
+                if safe_text(item.get("step")).strip()
+            )
+            if compact:
+                lines.append(f"Plan: {self.summarize_text(compact, 240)}")
+        for item in recent_jobs[-6:]:
+            summary = self.summarize_text(safe_text(item.get("finalMessage")) or safe_text(item.get("commandPreview")), 220)
+            status = safe_text(item.get("status")) or "unknown"
+            title = safe_text(item.get("title")) or safe_text(item.get("jobId"))
+            lines.append(f"- {title} [{status}]: {summary}")
+        session_doc["summary"] = "\n".join(lines)
+
+    def append_session_note(self, session: dict[str, Any], note: str) -> None:
+        text = safe_text(note).strip()
+        if not text:
+            return
+        existing = safe_text(session.get("notes")).strip()
+        if text in existing:
+            return
+        if existing:
+            session["notes"] = f"{existing}\n{text}"
+        else:
+            session["notes"] = text
+
+    def auto_update_session_plan(self, session: dict[str, Any], job: JobRecord) -> None:
+        plan_items = list(session.get("plan", []))
+        if not plan_items:
+            return
+        if job.status != "succeeded":
+            self.append_session_note(
+                session,
+                f"Job failed: {job.title} ({job.ended_at or now_iso()})",
+            )
+            return
+        target_step = safe_text(job.plan_step).strip()
+        in_progress_index = None
+        if target_step:
+            in_progress_index = next(
+                (index for index, item in enumerate(plan_items) if safe_text(item.get("step")).strip() == target_step),
+                None,
+            )
+        if in_progress_index is None:
+            in_progress_index = next(
+                (index for index, item in enumerate(plan_items) if safe_text(item.get("status")) == "in_progress"),
+                None,
+            )
+        if in_progress_index is None:
+            pending_index = next(
+                (index for index, item in enumerate(plan_items) if safe_text(item.get("status")) == "pending"),
+                None,
+            )
+            if pending_index is not None:
+                plan_items[pending_index]["status"] = "in_progress"
+                self.append_session_note(
+                    session,
+                    f"Auto-started plan item after job: {safe_text(plan_items[pending_index].get('step'))}",
+                )
+            session["plan"] = plan_items
+            return
+        completed_step = safe_text(plan_items[in_progress_index].get("step"))
+        plan_items[in_progress_index]["status"] = "completed"
+        if target_step:
+            for index, item in enumerate(plan_items):
+                if index == in_progress_index:
+                    continue
+                if safe_text(item.get("status")) == "in_progress":
+                    item["status"] = "pending"
+        pending_index = next(
+            (index for index, item in enumerate(plan_items) if safe_text(item.get("status")) == "pending"),
+            None,
+        )
+        if pending_index is not None:
+            plan_items[pending_index]["status"] = "in_progress"
+            next_step = safe_text(plan_items[pending_index].get("step"))
+            self.append_session_note(
+                session,
+                f"Auto-progressed plan after '{job.title}': completed '{completed_step}', now working on '{next_step}'.",
+            )
+        else:
+            self.append_session_note(
+                session,
+                f"Auto-progressed plan after '{job.title}': completed '{completed_step}'.",
+            )
+        session["plan"] = plan_items
+
+    def update_session_after_job(self, job: JobRecord) -> None:
+        session = self.load_session(job.session_id)
+        recent_jobs = list(session.get("recentJobs", []))
+        recent_jobs.append(
+            {
+                "jobId": job.job_id,
+                "title": job.title,
+                "kind": job.kind,
+                "status": job.status,
+                "planStep": job.plan_step,
+                "workspaceLabel": job.workspace_label,
+                "cwd": job.cwd,
+                "commandPreview": job.command_preview,
+                "endedAt": job.ended_at,
+                "finalMessage": self.summarize_text(job.final_message or job.output, 1000),
+            }
+        )
+        session["recentJobs"] = recent_jobs[-8:]
+        session["lastJobId"] = job.job_id
+        self.auto_update_session_plan(session, job)
+        self.refresh_session_summary(session)
+        self.save_session(session)
+
+    def build_session_context(self, session: dict[str, Any]) -> str:
+        lines = [
+            "[Session Context]",
+            f"Session: {safe_text(session.get('title'))}",
+        ]
+        if session.get("workspaceId"):
+            lines.append(f"Workspace: {safe_text(session.get('workspaceId'))}")
+        if session.get("projectPath"):
+            lines.append(f"Project Path: {safe_text(session.get('projectPath'))}")
+        notes = safe_text(session.get("notes")).strip()
+        if notes:
+            lines.append("Session Notes:")
+            lines.append(notes)
+        plan_items = session.get("plan", [])
+        if plan_items:
+            lines.append("Session Plan:")
+            for item in plan_items:
+                step = safe_text(item.get("step")).strip()
+                if not step:
+                    continue
+                status = safe_text(item.get("status")).strip() or "pending"
+                lines.append(f"- [{status}] {step}")
+        summary = safe_text(session.get("summary")).strip()
+        if summary:
+            lines.append("Recent Decisions:")
+            lines.append(summary)
+        recent_jobs = session.get("recentJobs", [])
+        if recent_jobs:
+            lines.append("Recent Outputs:")
+            for item in recent_jobs[-3:]:
+                lines.append(
+                    f"- {safe_text(item.get('title'))}: {self.summarize_text(safe_text(item.get('finalMessage')), 220)}"
+                )
+        lines.extend(
+            [
+                "",
+                "Use this session context as prior work. Continue from it unless the new request clearly overrides it.",
+                "",
+            ]
+        )
+        return "\n".join(lines)
 
     def codex_home(self) -> Path:
         return Path(os.environ.get("CARBONET_CODEX_HOME", str(Path.home() / ".codex")))
@@ -1318,13 +1880,12 @@ class LauncherApp:
         collapsed = "-".join(token for token in normalized.split("-") if token)
         return collapsed or "account"
 
-    def list_jobs(self) -> list[dict[str, Any]]:
+    def list_jobs(self, session_id: str | None = None) -> list[dict[str, Any]]:
         with self.lock:
-            items = sorted(
-                self.jobs.values(),
-                key=lambda item: item.started_at,
-                reverse=True,
-            )
+            items = list(self.jobs.values())
+            if session_id:
+                items = [item for item in items if item.session_id == session_id]
+            items = sorted(items, key=lambda item: item.started_at, reverse=True)
             return [item.as_dict() for item in items]
 
     def get_job(self, job_id: str) -> dict[str, Any]:
@@ -1345,13 +1906,17 @@ class LauncherApp:
 
     def run_job(self, payload: dict[str, Any]) -> dict[str, Any]:
         workspace = self.resolve_workspace(payload)
-        spec = self.build_spec(payload, workspace)
+        session = self.resolve_session(payload, workspace)
+        spec = self.build_spec(payload, workspace, session)
         job_id = uuid.uuid4().hex[:12]
         output_file = self.jobs_root / f"{job_id}-final.txt"
         job = JobRecord(
             job_id=job_id,
             title=spec["title"],
             kind=spec["kind"],
+            session_id=safe_text(session.get("id")),
+            session_title=safe_text(session.get("title")),
+            plan_step=safe_text(payload.get("planStep")).strip(),
             workspace_id=workspace["id"],
             workspace_label=workspace["label"],
             cwd=spec["cwd"],
@@ -1387,7 +1952,7 @@ class LauncherApp:
             raise ValueError(f"Workspace path not found: {path}")
         return workspace
 
-    def build_spec(self, payload: dict[str, Any], workspace: dict[str, Any]) -> dict[str, Any]:
+    def build_spec(self, payload: dict[str, Any], workspace: dict[str, Any], session: dict[str, Any]) -> dict[str, Any]:
         mode = safe_text(payload.get("mode"))
         if mode == "assistant_custom":
             prompt = safe_text(payload.get("prompt")).strip()
@@ -1398,11 +1963,13 @@ class LauncherApp:
                 return self.build_freeagent_spec(
                     title="Custom FreeAgent Prompt",
                     workspace=workspace,
+                    session=session,
                     prompt=prompt,
                 )
             return self.build_codex_spec(
                 title="Custom Codex Prompt",
                 workspace=workspace,
+                session=session,
                 prompt=prompt,
                 full_auto=True,
             )
@@ -1413,6 +1980,7 @@ class LauncherApp:
             return self.build_codex_spec(
                 title="Custom Codex Prompt",
                 workspace=workspace,
+                session=session,
                 prompt=prompt,
                 full_auto=True,
             )
@@ -1441,6 +2009,7 @@ class LauncherApp:
             return self.build_codex_spec(
                 title=safe_text(action.get("label")) or action_id,
                 workspace=self.resolve_action_workspace(action, workspace),
+                session=session,
                 prompt=prompt,
                 full_auto=bool(action.get("fullAuto", True)),
             )
@@ -1479,9 +2048,17 @@ class LauncherApp:
             raise ValueError(f"Unknown action workspace: {override_id}")
         return workspace
 
-    def build_codex_spec(self, title: str, workspace: dict[str, Any], prompt: str, full_auto: bool) -> dict[str, Any]:
+    def build_codex_spec(
+        self,
+        title: str,
+        workspace: dict[str, Any],
+        session: dict[str, Any],
+        prompt: str,
+        full_auto: bool,
+    ) -> dict[str, Any]:
         cwd = safe_text(workspace["path"])
         sandbox = safe_text(workspace.get("defaultSandbox")) or "workspace-write"
+        effective_prompt = f"{self.build_session_context(session)}{prompt}"
         command = [
             self.codex_bin(),
             "exec",
@@ -1495,7 +2072,7 @@ class LauncherApp:
         ]
         if full_auto:
             command.append("--full-auto")
-        command.append(prompt)
+        command.append(effective_prompt)
         return {
             "title": title,
             "kind": "codex",
@@ -1504,14 +2081,14 @@ class LauncherApp:
             "command_preview": shlex.join(command),
         }
 
-    def build_freeagent_spec(self, title: str, workspace: dict[str, Any], prompt: str) -> dict[str, Any]:
+    def build_freeagent_spec(self, title: str, workspace: dict[str, Any], session: dict[str, Any], prompt: str) -> dict[str, Any]:
         freeagent_home = self.freeagent_home()
         if not freeagent_home.exists():
             raise ValueError(f"FreeAgent source not found: {freeagent_home}")
         wrapper = Path(self.freeagent_bin())
         if not wrapper.exists():
             raise ValueError(f"FreeAgent launcher not found: {wrapper}")
-        command = [str(wrapper), "plan", prompt]
+        command = [str(wrapper), "plan", f"{self.build_session_context(session)}{prompt}"]
         return {
             "title": title,
             "kind": "freeagent",
@@ -1565,6 +2142,7 @@ class LauncherApp:
                     job.output = str(exc)
         finally:
             self.persist_job(job_id)
+            self.update_session_after_job(job)
 
     def persist_job(self, job_id: str) -> None:
         with self.lock:
@@ -1573,6 +2151,9 @@ class LauncherApp:
                 "jobId": job.job_id,
                 "title": job.title,
                 "kind": job.kind,
+                "sessionId": job.session_id,
+                "sessionTitle": job.session_title,
+                "planStep": job.plan_step,
                 "workspaceId": job.workspace_id,
                 "workspaceLabel": job.workspace_label,
                 "status": job.status,
@@ -1581,8 +2162,11 @@ class LauncherApp:
                 "exitCode": job.exit_code,
                 "commandPreview": job.command_preview,
             }
+            snapshot = job.as_dict()
         with self.history_file.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+        with self.job_record_path(job.job_id).open("w", encoding="utf-8") as handle:
+            json.dump(snapshot, handle, ensure_ascii=False, indent=2)
 
 
 class LauncherHandler(BaseHTTPRequestHandler):
@@ -1606,8 +2190,19 @@ class LauncherHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/bootstrap":
             self.write_json(HTTPStatus.OK, self.app.bootstrap())
             return
+        if parsed.path == "/api/sessions":
+            self.write_json(
+                HTTPStatus.OK,
+                {
+                    "items": self.app.list_sessions(),
+                    "currentSessionId": self.app.current_session_id(),
+                    "currentSession": self.app.current_session(),
+                },
+            )
+            return
         if parsed.path == "/api/jobs":
-            self.write_json(HTTPStatus.OK, {"items": self.app.list_jobs()})
+            session_id = parse_qs(parsed.query).get("sessionId", [""])[0] or None
+            self.write_json(HTTPStatus.OK, {"items": self.app.list_jobs(session_id)})
             return
         if parsed.path == "/api/accounts":
             self.write_json(
@@ -1727,6 +2322,27 @@ class LauncherHandler(BaseHTTPRequestHandler):
             except KeyError:
                 self.write_json(HTTPStatus.NOT_FOUND, {"message": "Job not found"})
             return
+        if parsed.path.endswith("/compare") and parsed.path.startswith("/api/sessions/"):
+            session_id = unquote(parsed.path.split("/")[-2])
+            try:
+                self.write_json(HTTPStatus.OK, self.app.compare_session(session_id))
+            except ValueError as exc:
+                self.write_json(HTTPStatus.NOT_FOUND, {"message": str(exc)})
+            return
+        if parsed.path.endswith("/family") and parsed.path.startswith("/api/sessions/"):
+            session_id = unquote(parsed.path.split("/")[-2])
+            try:
+                self.write_json(HTTPStatus.OK, self.app.session_family(session_id))
+            except ValueError as exc:
+                self.write_json(HTTPStatus.NOT_FOUND, {"message": str(exc)})
+            return
+        if parsed.path.startswith("/api/sessions/"):
+            session_id = parsed.path.split("/")[-1]
+            try:
+                self.write_json(HTTPStatus.OK, self.app.load_session(unquote(session_id)))
+            except ValueError as exc:
+                self.write_json(HTTPStatus.NOT_FOUND, {"message": str(exc)})
+            return
         self.write_json(HTTPStatus.NOT_FOUND, {"message": "Not found"})
 
     def do_HEAD(self) -> None:
@@ -1751,6 +2367,25 @@ class LauncherHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/run":
             try:
                 self.write_json(HTTPStatus.OK, self.app.run_job(payload))
+            except ValueError as exc:
+                self.write_json(HTTPStatus.BAD_REQUEST, {"message": str(exc)})
+            return
+        if parsed.path == "/api/sessions":
+            title = safe_text(payload.get("title")).strip() or "New Session"
+            self.write_json(
+                HTTPStatus.OK,
+                self.app.create_session(
+                    title,
+                    safe_text(payload.get("workspaceId")).strip(),
+                    safe_text(payload.get("projectPath")).strip(),
+                ),
+            )
+            return
+        if parsed.path.endswith("/branch") and parsed.path.startswith("/api/sessions/"):
+            session_id = unquote(parsed.path.split("/")[-2])
+            title = safe_text(payload.get("title")).strip()
+            try:
+                self.write_json(HTTPStatus.OK, self.app.create_branch_session(session_id, title))
             except ValueError as exc:
                 self.write_json(HTTPStatus.BAD_REQUEST, {"message": str(exc)})
             return
@@ -1844,6 +2479,30 @@ class LauncherHandler(BaseHTTPRequestHandler):
             account_id = unquote(parsed.path.split("/")[-2])
             try:
                 self.write_json(HTTPStatus.OK, self.app.activate_account(account_id))
+            except ValueError as exc:
+                self.write_json(HTTPStatus.BAD_REQUEST, {"message": str(exc)})
+            return
+        if parsed.path.endswith("/activate") and parsed.path.startswith("/api/sessions/"):
+            session_id = unquote(parsed.path.split("/")[-2])
+            try:
+                self.write_json(HTTPStatus.OK, self.app.activate_session(session_id))
+            except ValueError as exc:
+                self.write_json(HTTPStatus.BAD_REQUEST, {"message": str(exc)})
+            return
+        if parsed.path.endswith("/update") and parsed.path.startswith("/api/sessions/"):
+            session_id = unquote(parsed.path.split("/")[-2])
+            try:
+                self.write_json(
+                    HTTPStatus.OK,
+                    self.app.update_session(
+                        session_id,
+                        title=payload.get("title"),
+                        notes=payload.get("notes"),
+                        plan=payload.get("plan") if isinstance(payload.get("plan"), list) else None,
+                        workspace_id=payload.get("workspaceId"),
+                        project_path=payload.get("projectPath"),
+                    ),
+                )
             except ValueError as exc:
                 self.write_json(HTTPStatus.BAD_REQUEST, {"message": str(exc)})
             return

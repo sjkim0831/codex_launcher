@@ -24,6 +24,59 @@
 
         <section class="panel">
           <div class="panel-head">
+            <h2>Sessions</h2>
+            <button id="refresh-sessions" class="ghost-button" type="button">Refresh</button>
+          </div>
+          <div class="field-row compact">
+            <label for="session-title">New Session</label>
+            <input id="session-title" type="text" placeholder="예: Carbonet 메뉴 마이그레이션">
+          </div>
+          <div class="button-row">
+            <button id="create-session" class="secondary-button" type="button">Create</button>
+            <button id="branch-session" class="ghost-button" type="button">Branch Current</button>
+          </div>
+          <div id="current-session" class="muted"></div>
+          <div class="field-row compact">
+            <label for="session-notes">Notes</label>
+            <textarea id="session-notes" rows="4" placeholder="현재 세션의 배경, 제약, 결정사항을 적으세요"></textarea>
+          </div>
+          <div class="field-row compact">
+            <label for="session-plan">Plan</label>
+            <textarea id="session-plan" rows="5" placeholder="한 줄에 하나씩 작성. 예: in_progress | 세션 구조 설계"></textarea>
+          </div>
+          <div class="field-row compact">
+            <label for="active-plan-step">Active Step</label>
+            <select id="active-plan-step"></select>
+          </div>
+          <div class="button-row">
+            <button id="save-session-context" class="ghost-button" type="button">Save Context</button>
+          </div>
+          <div class="panel-head compact-head">
+            <h3>Plan Status</h3>
+            <button id="toggle-session-plan" class="ghost-button" type="button">Hide</button>
+          </div>
+          <div id="session-plan-view" class="session-plan-view"></div>
+          <div class="panel-head compact-head">
+            <h3>Session Tree</h3>
+            <button id="toggle-session-tree" class="ghost-button" type="button">Hide</button>
+          </div>
+          <div id="session-tree-view" class="session-tree-view"></div>
+          <div class="panel-head compact-head">
+            <h3>Branch Navigation</h3>
+            <button id="toggle-session-family" class="ghost-button" type="button">Hide</button>
+          </div>
+          <div id="session-family-view" class="session-family-view"></div>
+          <div class="panel-head compact-head">
+            <h3>Compare</h3>
+            <button id="toggle-session-compare" class="ghost-button" type="button">Hide</button>
+          </div>
+          <div id="session-compare-view" class="session-compare-view"></div>
+          <pre id="session-summary" class="console-output">세션 요약이 여기에 표시됩니다.</pre>
+          <div id="session-list" class="workspace-list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
             <h2>Accounts</h2>
             <button id="refresh-accounts" class="ghost-button" type="button">Refresh</button>
           </div>
@@ -287,6 +340,7 @@
               <h2>Command</h2>
               <span id="job-meta" class="muted">실행 전</span>
             </div>
+            <div id="job-plan-step" class="muted inline-note">Plan step 없음</div>
             <pre id="command-preview" class="command-preview">아직 실행된 작업이 없습니다.</pre>
           </div>
 

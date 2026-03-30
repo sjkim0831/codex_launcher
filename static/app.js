@@ -4,7 +4,17 @@ const state = {
   selectedActionId: "",
   selectedJobId: "",
   selectedAccountId: "",
+  selectedSessionId: "",
+  selectedPlanStep: "",
+  sessionPanelOpen: {
+    plan: true,
+    tree: true,
+    family: true,
+    compare: true
+  },
   selectedCli: "codex",
+  sessions: [],
+  currentSession: null,
   referenceRoots: [],
   selectedReferenceRootId: "",
   referenceProjects: [],
@@ -41,6 +51,20 @@ async function api(url, options = {}) {
 
 function byId(id) {
   return document.getElementById(id);
+}
+
+function syncSessionPanelToggles() {
+  const mappings = [
+    ["plan", "session-plan-view", "toggle-session-plan"],
+    ["tree", "session-tree-view", "toggle-session-tree"],
+    ["family", "session-family-view", "toggle-session-family"],
+    ["compare", "session-compare-view", "toggle-session-compare"]
+  ];
+  mappings.forEach(([key, contentId, buttonId]) => {
+    const open = Boolean(state.sessionPanelOpen[key]);
+    byId(contentId).classList.toggle("is-collapsed", !open);
+    byId(buttonId).textContent = open ? "Hide" : "Show";
+  });
 }
 
 function escapeHtml(value) {
@@ -100,6 +124,316 @@ function accountSummaryText(account) {
     bits.push(account.authMode);
   }
   return bits.filter(Boolean).join(" · ");
+}
+
+function sessionSummaryText(session) {
+  const bits = [session.title || session.id];
+  if (session.parentSessionId) {
+    bits.push(`branch of ${session.parentSessionId}`);
+  }
+  if (session.workspaceId) {
+    bits.push(session.workspaceId);
+  }
+  if (session.updatedAt) {
+    bits.push(session.updatedAt);
+  }
+  return bits.filter(Boolean).join(" · ");
+}
+
+function formatSessionPlan(plan) {
+  const items = Array.isArray(plan) ? plan : [];
+  return items.map((item) => `${item.status || "pending"} | ${item.step || ""}`.trim()).join("\n");
+}
+
+function parseSessionPlan(text) {
+  return String(text || "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const parts = line.split("|");
+      if (parts.length >= 2) {
+        return {
+          status: parts[0].trim() || "pending",
+          step: parts.slice(1).join("|").trim()
+        };
+      }
+      return {
+        status: "pending",
+        step: line
+      };
+    })
+    .filter((item) => item.step);
+}
+
+function renderSessions(sessions, currentSession) {
+  state.sessions = sessions || [];
+  state.currentSession = currentSession || null;
+  state.selectedSessionId = currentSession?.id || sessions?.[0]?.id || "";
+  byId("current-session").textContent = state.selectedSessionId
+    ? `Active: ${sessionSummaryText(currentSession || {})}`
+    : "Active session 없음";
+  byId("session-notes").value = currentSession?.notes || "";
+  byId("session-plan").value = formatSessionPlan(currentSession?.plan || []);
+  renderActivePlanOptions(currentSession?.plan || []);
+  renderSessionPlanView(currentSession?.plan || []);
+  renderSessionTreeView(state.sessions, state.selectedSessionId);
+  renderSessionFamilyView(currentSession || null).catch((error) => {
+    byId("session-family-view").innerHTML = `<div class="muted">${escapeHtml(error instanceof Error ? error.message : String(error))}</div>`;
+  });
+  byId("session-summary").textContent = currentSession?.summary || "세션 요약이 아직 없습니다.";
+  renderSessionCompareView(currentSession || null).catch((error) => {
+    byId("session-compare-view").innerHTML = `<div class="muted">${escapeHtml(error instanceof Error ? error.message : String(error))}</div>`;
+  });
+  syncSessionPanelToggles();
+  const target = byId("session-list");
+  if (!state.sessions.length) {
+    target.innerHTML = `<div class="muted">세션이 없습니다.</div>`;
+    return;
+  }
+  target.innerHTML = state.sessions.map((session) => `
+    <button class="workspace-card ${session.id === state.selectedSessionId ? "active" : ""}" data-session-id="${session.id}" type="button">
+      <strong>${escapeHtml(session.title || session.id)}</strong>
+      <div class="muted">${escapeHtml(session.summary || "아직 요약 없음")}</div>
+      <div class="account-card-meta">
+        <span class="pill">${escapeHtml(session.parentSessionId ? `branch:${session.parentSessionId}` : "root")}</span>
+        <span class="pill">${escapeHtml(session.workspaceId || "workspace 없음")}</span>
+        <span class="pill">${escapeHtml(session.updatedAt || "")}</span>
+      </div>
+    </button>
+  `).join("");
+  target.querySelectorAll("[data-session-id]").forEach((element) => {
+    element.addEventListener("click", async () => {
+      const sessionId = element.getAttribute("data-session-id") || "";
+      await activateSessionById(sessionId);
+    });
+  });
+}
+
+async function activateSessionById(sessionId) {
+  const payload = await api(`/api/sessions/${sessionId}/activate`, {
+    method: "POST",
+    body: "{}"
+  });
+  renderSessions(payload.items || [], payload.session || null);
+  await refreshJobs();
+}
+
+function renderActivePlanOptions(plan) {
+  const select = byId("active-plan-step");
+  const items = Array.isArray(plan) ? plan : [];
+  select.innerHTML = [
+    `<option value="">자동 선택</option>`,
+    ...items.map((item) => {
+      const step = String(item.step || "");
+      const status = String(item.status || "pending");
+      return `<option value="${escapeAttribute(step)}">${escapeHtml(`[${status}] ${step}`)}</option>`;
+    })
+  ].join("");
+  const defaultStep = items.find((item) => item.status === "in_progress")?.step || "";
+  state.selectedPlanStep = items.some((item) => item.step === state.selectedPlanStep)
+    ? state.selectedPlanStep
+    : defaultStep;
+  select.value = state.selectedPlanStep || "";
+}
+
+function renderSessionPlanView(plan) {
+  const target = byId("session-plan-view");
+  const items = Array.isArray(plan) ? plan : [];
+  if (!items.length) {
+    target.innerHTML = `<div class="muted">세션 plan이 없습니다.</div>`;
+    return;
+  }
+  target.innerHTML = items.map((item) => `
+    <div class="session-plan-item" data-status="${escapeAttribute(item.status || "pending")}">
+      <strong>${escapeHtml(item.step || "")}</strong>
+      <span class="pill">${escapeHtml(item.status || "pending")}</span>
+    </div>
+  `).join("");
+}
+
+function renderSessionTreeView(sessions, currentSessionId) {
+  const target = byId("session-tree-view");
+  const items = Array.isArray(sessions) ? sessions : [];
+  if (!items.length) {
+    target.innerHTML = `<div class="muted">세션 트리가 없습니다.</div>`;
+    return;
+  }
+  const byParent = new Map();
+  const roots = [];
+  items.forEach((item) => {
+    const parentId = item.parentSessionId || "";
+    if (!parentId) {
+      roots.push(item);
+      return;
+    }
+    const siblings = byParent.get(parentId) || [];
+    siblings.push(item);
+    byParent.set(parentId, siblings);
+  });
+  const summarizeNode = (node) => {
+    const plan = Array.isArray(node.plan) ? node.plan : [];
+    const completed = plan.filter((item) => item.status === "completed").length;
+    const total = plan.length;
+    const running = plan.find((item) => item.status === "in_progress")?.step || "";
+    const recentJobs = Array.isArray(node.recentJobs) ? node.recentJobs.length : 0;
+    return {
+      planText: total ? `plan ${completed}/${total}` : "plan 없음",
+      runningText: running ? `active ${running}` : "",
+      jobsText: recentJobs ? `jobs ${recentJobs}` : "jobs 0"
+    };
+  };
+  const renderNode = (node) => {
+    const children = byParent.get(node.id) || [];
+    const summary = summarizeNode(node);
+    return `
+      <div class="session-tree-branch">
+        <button class="session-tree-node ${node.id === currentSessionId ? "current" : ""}" data-tree-session-id="${escapeAttribute(node.id)}" type="button">
+          <strong>${escapeHtml(node.id === currentSessionId ? `Current: ${node.title}` : node.title || node.id)}</strong>
+          <div class="session-tree-meta">
+            <span class="pill">${escapeHtml(summary.planText)}</span>
+            <span class="pill">${escapeHtml(summary.jobsText)}</span>
+            ${summary.runningText ? `<span class="pill">${escapeHtml(summary.runningText)}</span>` : ""}
+          </div>
+        </button>
+        ${children.length ? `<div class="session-tree-children">${children.map(renderNode).join("")}</div>` : ""}
+      </div>
+    `;
+  };
+  target.innerHTML = `<div class="session-tree-box"><strong>Session Tree</strong>${roots.map(renderNode).join("")}</div>`;
+  target.querySelectorAll("[data-tree-session-id]").forEach((element) => {
+    element.addEventListener("click", async () => {
+      const sessionId = element.getAttribute("data-tree-session-id") || "";
+      if (sessionId) {
+        await activateSessionById(sessionId);
+      }
+    });
+  });
+}
+
+async function focusPlanStep(step) {
+  state.selectedPlanStep = step || "";
+  byId("active-plan-step").value = state.selectedPlanStep || "";
+  const recentJobs = Array.isArray(state.currentSession?.recentJobs) ? state.currentSession.recentJobs : [];
+  const match = [...recentJobs].reverse().find((item) => (item.planStep || "") === state.selectedPlanStep);
+  if (match?.jobId) {
+    await loadJob(match.jobId);
+  }
+}
+
+async function renderSessionFamilyView(session) {
+  const target = byId("session-family-view");
+  if (!session?.id) {
+    target.innerHTML = `<div class="muted">세션 탐색 정보가 없습니다.</div>`;
+    return;
+  }
+  const payload = await api(`/api/sessions/${session.id}/family`);
+  const siblings = payload.siblings || [];
+  const lines = [
+    `<div class="session-family-box">`,
+    `<strong>Branch Navigation</strong>`,
+    `<div class="session-family-actions">`
+  ];
+  if (payload.parent?.id) {
+    lines.push(`
+      <button class="session-family-link ${payload.parent.isCurrent ? "current" : ""}" data-family-session-id="${escapeAttribute(payload.parent.id)}" type="button">
+        ${escapeHtml(payload.parent.isCurrent ? `Current: ${payload.parent.title}` : `Parent: ${payload.parent.title}`)}
+      </button>
+    `);
+  }
+  lines.push(...siblings.map((item) => `
+    <button class="session-family-link ${item.isCurrent ? "current" : ""}" data-family-session-id="${escapeAttribute(item.id)}" type="button">
+      ${escapeHtml(item.isCurrent ? `Current: ${item.title}` : item.title)}
+    </button>
+  `));
+  lines.push(`</div>`, `</div>`);
+  target.innerHTML = lines.join("");
+  target.querySelectorAll("[data-family-session-id]").forEach((element) => {
+    element.addEventListener("click", async () => {
+      const sessionId = element.getAttribute("data-family-session-id") || "";
+      if (sessionId) {
+        await activateSessionById(sessionId);
+      }
+    });
+  });
+}
+
+async function renderSessionCompareView(session) {
+  const target = byId("session-compare-view");
+  if (!session?.id || !session?.parentSessionId) {
+    target.innerHTML = `<div class="muted">비교할 부모 세션이 없습니다.</div>`;
+    return;
+  }
+  const payload = await api(`/api/sessions/${session.id}/compare`);
+  const changedSteps = payload.changedSteps || [];
+  const newJobs = payload.newJobs || [];
+  const notesAdded = payload.notesAdded || [];
+  const notesRemoved = payload.notesRemoved || [];
+  const lines = [
+    `<div class="session-compare-box">`,
+    `<strong>Compare with ${escapeHtml(payload.parentTitle || payload.parentSessionId || "parent")}</strong>`,
+    `<div class="muted">${escapeHtml(payload.notesChanged ? "Notes changed" : "Notes unchanged")}</div>`
+  ];
+  if (notesAdded.length) {
+    lines.push(...notesAdded.map((line) => `<div class="muted">+ ${escapeHtml(line)}</div>`));
+  }
+  if (notesRemoved.length) {
+    lines.push(...notesRemoved.map((line) => `<div class="muted">- ${escapeHtml(line)}</div>`));
+  }
+  if (changedSteps.length) {
+    lines.push(...changedSteps.map((item) => `
+      <button class="session-compare-job" data-compare-step="${escapeAttribute(item.step || "")}" type="button">
+        <strong>${escapeHtml(item.step)}</strong>
+        <div class="muted">${escapeHtml(item.parentStatus || "-")} -> ${escapeHtml(item.sessionStatus || "-")}</div>
+      </button>
+    `));
+  } else {
+    lines.push(`<div class="muted">Changed steps 없음</div>`);
+  }
+  if (newJobs.length) {
+    lines.push(`<div class="muted">New jobs</div>`);
+    lines.push(...newJobs.map((item) => `
+      <button class="session-compare-job" data-compare-job-id="${escapeAttribute(item.jobId || "")}" type="button">
+        <strong>${escapeHtml(item.title || item.jobId || "")}</strong>
+        <div class="muted">${escapeHtml(item.planStep ? `step: ${item.planStep}` : "step: 자동")}</div>
+      </button>
+    `));
+  } else {
+    lines.push(`<div class="muted">새 job 없음</div>`);
+  }
+  lines.push(`</div>`);
+  target.innerHTML = lines.join("");
+  target.querySelectorAll("[data-compare-job-id]").forEach((element) => {
+    element.addEventListener("click", async () => {
+      const jobId = element.getAttribute("data-compare-job-id") || "";
+      if (jobId) {
+        await loadJob(jobId);
+      }
+    });
+  });
+  target.querySelectorAll("[data-compare-step]").forEach((element) => {
+    element.addEventListener("click", async () => {
+      const step = element.getAttribute("data-compare-step") || "";
+      await focusPlanStep(step);
+    });
+  });
+}
+
+async function saveSessionContext() {
+  if (!state.selectedSessionId) {
+    alert("먼저 세션을 선택하세요.");
+    return;
+  }
+  const payload = await api(`/api/sessions/${state.selectedSessionId}/update`, {
+    method: "POST",
+    body: JSON.stringify({
+      notes: byId("session-notes").value,
+      plan: parseSessionPlan(byId("session-plan").value),
+      workspaceId: state.selectedWorkspaceId,
+      projectPath: state.selectedProjectPath
+    })
+  });
+  renderSessions(payload.items || [], payload.session || null);
 }
 
 function renderAccounts(accounts, currentAccountId) {
@@ -850,14 +1184,18 @@ function syncBrowserStatus(browser) {
 
 function renderJobs(jobs) {
   const target = byId("job-list");
-  if (!jobs.length) {
-    target.innerHTML = `<div class="muted">아직 실행 이력이 없습니다.</div>`;
+  const items = state.selectedPlanStep
+    ? jobs.filter((job) => (job.planStep || "") === state.selectedPlanStep)
+    : jobs;
+  if (!items.length) {
+    target.innerHTML = `<div class="muted">${escapeHtml(state.selectedPlanStep ? `선택한 step(${state.selectedPlanStep})에 해당하는 실행 이력이 없습니다.` : "아직 실행 이력이 없습니다.")}</div>`;
     return;
   }
-  target.innerHTML = jobs.map((job) => `
+  target.innerHTML = items.map((job) => `
     <button class="job-card ${job.jobId === state.selectedJobId ? "active" : ""}" data-job-id="${job.jobId}" type="button">
       <strong>${escapeHtml(job.title)}</strong>
       <div class="muted">${escapeHtml(job.workspaceLabel || "")}</div>
+      <div class="muted">${escapeHtml(job.planStep ? `step: ${job.planStep}` : "step: 자동")}</div>
       <div class="pill ${job.status === "succeeded" ? "success" : job.status === "failed" ? "danger" : ""}">
         ${escapeHtml(job.status)}
       </div>
@@ -882,14 +1220,21 @@ function setJobDetail(job) {
   }
   state.selectedJobId = job.jobId;
   byId("job-meta").textContent = `${job.status} · ${job.workspaceLabel || ""} · ${job.startedAt || ""}`;
+  byId("job-plan-step").textContent = job.planStep ? `Plan step: ${job.planStep}` : "Plan step: 자동 선택";
   byId("command-preview").textContent = job.commandPreview || "명령 정보가 없습니다.";
   byId("raw-output").textContent = job.output || "출력이 없습니다.";
   byId("final-output").textContent = job.finalMessage || "Codex 최종 응답이 없습니다.";
 }
 
 async function refreshJobs() {
-  const payload = await api("/api/jobs");
+  const query = state.selectedSessionId ? `?sessionId=${encodeURIComponent(state.selectedSessionId)}` : "";
+  const payload = await api(`/api/jobs${query}`);
   renderJobs(payload.items || []);
+}
+
+async function refreshSessions() {
+  const payload = await api("/api/sessions");
+  renderSessions(payload.items || [], payload.currentSession || null);
 }
 
 async function refreshAccounts() {
@@ -909,7 +1254,8 @@ async function loadJob(jobId) {
   }
   const job = await api(`/api/jobs/${jobId}`);
   setJobDetail(job);
-  renderJobs((await api("/api/jobs")).items || []);
+  const query = state.selectedSessionId ? `?sessionId=${encodeURIComponent(state.selectedSessionId)}` : "";
+  renderJobs((await api(`/api/jobs${query}`)).items || []);
   if (job.status === "running") {
     startPolling(jobId);
   }
@@ -923,6 +1269,7 @@ function startPolling(jobId) {
       setJobDetail(job);
       await refreshJobs();
       if (job.status !== "running") {
+        await refreshSessions();
         stopPolling();
       }
     } catch (error) {
@@ -948,6 +1295,8 @@ async function runAction() {
   const payload = await api("/api/run", {
     method: "POST",
     body: JSON.stringify({
+      sessionId: state.selectedSessionId,
+      planStep: state.selectedPlanStep,
       workspaceId: state.selectedWorkspaceId,
       projectPath: state.selectedProjectPath,
       actionId: state.selectedActionId,
@@ -968,6 +1317,8 @@ async function runCustomCodex() {
   const payload = await api("/api/run", {
     method: "POST",
     body: JSON.stringify({
+      sessionId: state.selectedSessionId,
+      planStep: state.selectedPlanStep,
       workspaceId: state.selectedWorkspaceId,
       projectPath: state.selectedProjectPath,
       mode: "assistant_custom",
@@ -989,6 +1340,8 @@ async function runCustomShell() {
   const payload = await api("/api/run", {
     method: "POST",
     body: JSON.stringify({
+      sessionId: state.selectedSessionId,
+      planStep: state.selectedPlanStep,
       workspaceId: state.selectedWorkspaceId,
       projectPath: state.selectedProjectPath,
       mode: "shell_custom",
@@ -1012,6 +1365,8 @@ async function runProjectShell(projectPath, shellCommand, title) {
   const payload = await api("/api/run", {
     method: "POST",
     body: JSON.stringify({
+      sessionId: state.selectedSessionId,
+      planStep: state.selectedPlanStep,
       projectPath,
       mode: "shell_custom",
       shellCommand
@@ -1149,10 +1504,43 @@ async function saveCurrentAccount() {
   await refreshAccounts();
 }
 
+async function createSession() {
+  const title = byId("session-title").value.trim() || "New Session";
+  const payload = await api("/api/sessions", {
+    method: "POST",
+    body: JSON.stringify({
+      title,
+      workspaceId: state.selectedWorkspaceId,
+      projectPath: state.selectedProjectPath
+    })
+  });
+  byId("session-title").value = "";
+  renderSessions(payload.items || [], payload.session || null);
+  await refreshJobs();
+}
+
+async function branchSession() {
+  if (!state.selectedSessionId) {
+    alert("먼저 세션을 선택하세요.");
+    return;
+  }
+  const title = byId("session-title").value.trim();
+  const payload = await api(`/api/sessions/${state.selectedSessionId}/branch`, {
+    method: "POST",
+    body: JSON.stringify({ title })
+  });
+  byId("session-title").value = "";
+  renderSessions(payload.items || [], payload.session || null);
+  await refreshJobs();
+}
+
 async function bootstrap() {
   state.bootstrap = await api("/api/bootstrap");
   state.selectedWorkspaceId = state.bootstrap.defaultWorkspaceId || state.bootstrap.workspaces?.[0]?.id || "";
   state.selectedCli = state.bootstrap.cliOptions?.[0]?.id || "codex";
+  state.sessions = state.bootstrap.sessions || [];
+  state.currentSession = state.bootstrap.currentSession || null;
+  state.selectedSessionId = state.bootstrap.currentSessionId || state.sessions[0]?.id || "";
   state.referenceRoots = state.bootstrap.referenceRoots || [];
   state.projectRoots = state.bootstrap.projectRoots || [];
   state.selectedReferenceRootId = state.referenceRoots[0]?.id || "";
@@ -1183,6 +1571,7 @@ async function bootstrap() {
     ? "등록된 project 루트를 불러오는 중입니다."
     : "디폴트 루트가 없습니다. Project Root에 /opt/projects 를 등록하세요.";
   renderWorkspaces();
+  renderSessions(state.sessions, state.currentSession);
   renderActions();
   renderCliOptions();
   syncWorkspaceCaption();
@@ -1205,8 +1594,28 @@ window.addEventListener("DOMContentLoaded", async () => {
   byId("run-custom-shell").addEventListener("click", runCustomShell);
   byId("cancel-job").addEventListener("click", cancelCurrentJob);
   byId("refresh-jobs").addEventListener("click", refreshJobs);
+  byId("toggle-session-plan").addEventListener("click", () => {
+    state.sessionPanelOpen.plan = !state.sessionPanelOpen.plan;
+    syncSessionPanelToggles();
+  });
+  byId("toggle-session-tree").addEventListener("click", () => {
+    state.sessionPanelOpen.tree = !state.sessionPanelOpen.tree;
+    syncSessionPanelToggles();
+  });
+  byId("toggle-session-family").addEventListener("click", () => {
+    state.sessionPanelOpen.family = !state.sessionPanelOpen.family;
+    syncSessionPanelToggles();
+  });
+  byId("toggle-session-compare").addEventListener("click", () => {
+    state.sessionPanelOpen.compare = !state.sessionPanelOpen.compare;
+    syncSessionPanelToggles();
+  });
+  byId("refresh-sessions").addEventListener("click", refreshSessions);
+  byId("save-session-context").addEventListener("click", saveSessionContext);
   byId("refresh-login").addEventListener("click", refreshLogin);
   byId("refresh-accounts").addEventListener("click", refreshAccounts);
+  byId("create-session").addEventListener("click", createSession);
+  byId("branch-session").addEventListener("click", branchSession);
   byId("save-current-account").addEventListener("click", saveCurrentAccount);
   byId("start-login").addEventListener("click", startLogin);
   byId("logout-login").addEventListener("click", logoutLogin);
@@ -1285,6 +1694,9 @@ window.addEventListener("DOMContentLoaded", async () => {
         byId("raw-output").textContent = error instanceof Error ? error.message : String(error);
       });
     }
+  });
+  byId("active-plan-step").addEventListener("change", () => {
+    state.selectedPlanStep = byId("active-plan-step").value || "";
   });
   byId("project-build-frontend").addEventListener("click", buildSelectedProjectFrontend);
   byId("project-package-backend").addEventListener("click", packageSelectedProjectBackend);
