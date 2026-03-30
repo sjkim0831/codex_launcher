@@ -290,11 +290,22 @@ function renderSessionPlanView(plan) {
     return;
   }
   target.innerHTML = items.map((item) => `
-    <div class="session-plan-item" data-status="${escapeAttribute(item.status || "pending")}">
+    <button
+      class="session-plan-item ${item.step === state.selectedPlanStep ? "active" : ""}"
+      data-status="${escapeAttribute(item.status || "pending")}"
+      data-plan-step="${escapeAttribute(item.step || "")}"
+      type="button"
+    >
       <strong>${escapeHtml(item.step || "")}</strong>
       <span class="pill">${escapeHtml(item.status || "pending")}</span>
-    </div>
+    </button>
   `).join("");
+  target.querySelectorAll("[data-plan-step]").forEach((element) => {
+    element.addEventListener("click", async () => {
+      const step = element.getAttribute("data-plan-step") || "";
+      await focusPlanStep(step === state.selectedPlanStep ? "" : step);
+    });
+  });
 }
 
 function renderSessionTreeView(sessions, currentSessionId) {
