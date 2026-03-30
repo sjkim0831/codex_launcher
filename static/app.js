@@ -1235,9 +1235,13 @@ function syncBrowserStatus(browser) {
 
 function renderJobs(jobs) {
   const target = byId("job-list");
+  const filterBar = byId("job-filter-bar");
+  const filterText = byId("job-filter-text");
   const items = state.selectedPlanStep
     ? jobs.filter((job) => (job.planStep || "") === state.selectedPlanStep)
     : jobs;
+  filterBar.classList.toggle("is-collapsed", !state.selectedPlanStep);
+  filterText.textContent = state.selectedPlanStep ? `Filtered by step: ${state.selectedPlanStep}` : "";
   if (!items.length) {
     target.innerHTML = `<div class="muted">${escapeHtml(state.selectedPlanStep ? `선택한 step(${state.selectedPlanStep})에 해당하는 실행 이력이 없습니다.` : "아직 실행 이력이 없습니다.")}</div>`;
     return;
@@ -1646,6 +1650,11 @@ window.addEventListener("DOMContentLoaded", async () => {
   byId("run-custom-shell").addEventListener("click", runCustomShell);
   byId("cancel-job").addEventListener("click", cancelCurrentJob);
   byId("refresh-jobs").addEventListener("click", refreshJobs);
+  byId("clear-job-filter").addEventListener("click", () => {
+    focusPlanStep("").catch((error) => {
+      byId("raw-output").textContent = error instanceof Error ? error.message : String(error);
+    });
+  });
   byId("toggle-session-plan").addEventListener("click", () => {
     state.sessionPanelOpen.plan = !state.sessionPanelOpen.plan;
     syncSessionPanelToggles();

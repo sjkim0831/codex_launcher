@@ -139,6 +139,18 @@ select {
   gap: 10px;
 }
 
+.job-filter-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fffaf4;
+}
+
 .session-plan-view {
   display: grid;
   gap: 8px;
