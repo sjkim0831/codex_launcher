@@ -161,6 +161,33 @@ select {
   gap: 8px;
 }
 
+.session-tree-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.session-legend-item[data-status="completed"] {
+  background: #f0f7ec;
+  border: 1px solid #7ba05b;
+}
+
+.session-legend-item[data-status="in_progress"] {
+  background: #fff6ee;
+  border: 1px solid var(--accent);
+}
+
+.session-legend-item[data-status="failed"] {
+  background: #fff0f0;
+  border: 1px solid var(--danger);
+}
+
+.session-legend-item[data-status="idle"] {
+  background: var(--panel-strong);
+  border: 1px solid var(--border);
+}
+
 .session-family-view {
   display: grid;
   gap: 8px;
