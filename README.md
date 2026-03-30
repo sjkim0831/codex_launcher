@@ -14,11 +14,18 @@
 핵심 기능:
 
 - Carbonet 기준 자주 쓰는 workspace 선택
+- 세션 기반 작업 연속성 유지
+- 세션 브랜치 생성 및 부모/형제 브랜치 탐색
+- 세션 notes / plan / active step 관리
+- 세션 compare, tree, family 뷰
 - 버튼 기반 quick action
 - 자유 Codex prompt 입력
 - 자유 shell command 입력
 - Codex 로그인 슬롯 저장/선택
 - `codex exec` 결과와 원본 로그를 같은 화면에서 확인
+- job 결과를 세션 요약과 plan 상태에 자동 반영
+- 재시작 후 job/session 복원
+- `job-history.jsonl` 기반 Legacy History fallback 복원
 - JSON/스크립트 기반 확장
 
 ## 실행
@@ -39,6 +46,37 @@ http://localhost:43110
 - `CARBONET_CODEX_PORT`
 - `CARBONET_CODEX_BIN`
 
+## 세션 모델
+
+- 모든 AI/shell 실행은 현재 선택된 session에 귀속된다.
+- session은 `data/sessions/<sessionId>/session.json`에 저장된다.
+- session에는 `notes`, `plan`, `recentJobs`, `summary`, `parentSessionId`가 포함된다.
+- `Branch Current`를 누르면 현재 session의 notes/plan/recentJobs를 복사한 브랜치 session이 생성된다.
+- session compare는 부모 session 대비 notes diff, changed steps, new jobs를 보여준다.
+- session family는 부모/형제 브랜치를 빠르게 전환하는 용도다.
+
+## 작업 연속성
+
+- Codex / FreeAgent 실행 시 launcher가 현재 session context를 프롬프트 앞에 자동 주입한다.
+- session plan은 `status | step` 형식으로 저장한다.
+- `Active Step`을 지정하면 실행 job이 특정 plan step과 연결된다.
+- 성공한 job은 기본적으로 plan을 자동 진행시키고, 실패한 job은 notes에 실패 흔적을 남긴다.
+- compare에서 changed step을 클릭하면 해당 step이 `Active Step`으로 맞춰지고 관련 job 상세를 바로 열 수 있다.
+
+## 런타임 저장소
+
+- `data/jobs/<jobId>.json`: 최신 job 스냅샷
+- `data/jobs/<jobId>-final.txt`: 최종 응답/출력 텍스트
+- `data/job-history.jsonl`: 레거시 포함 전체 실행 이력
+- `data/current-session.txt`: 현재 활성 session id
+- `data/accounts/<slot>`: Codex 로그인 슬롯
+
+재시작 동작:
+
+- 새 job은 `data/jobs/*.json`에서 복원된다.
+- sidecar가 없는 예전 job은 `job-history.jsonl`에서 fallback 복원된다.
+- 세션 정보가 없는 예전 job은 `Legacy History` 세션으로 묶인다.
+
 ## 확장 방식
 
 1. 워크스페이스 추가: `config/workspaces.json`
@@ -57,6 +95,17 @@ http://localhost:43110
 
 - `shell`: 일반 명령 실행
 - `codex`: `codex exec`로 프롬프트 실행
+
+## UI 요약
+
+- `Sessions`: 생성, 브랜치, notes/plan 저장, active step 선택
+- `Plan Status`: 현재 session plan 상태
+- `Session Tree`: 부모-브랜치 구조와 진행도 요약
+- `Branch Navigation`: 부모/형제 브랜치 빠른 이동
+- `Compare`: 부모 session 대비 notes diff / changed steps / new jobs
+- `Jobs`: 현재 session 기준 실행 이력
+
+세션 패널의 `Plan Status`, `Session Tree`, `Branch Navigation`, `Compare`는 각각 접고 펼칠 수 있다.
 
 ## 설치 반영
 
