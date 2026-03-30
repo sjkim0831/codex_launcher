@@ -6,6 +6,7 @@ const state = {
   selectedAccountId: "",
   selectedSessionId: "",
   selectedPlanStep: "",
+  selectedPlanStepBySession: {},
   sessionPanelOpen: {
     plan: true,
     tree: true,
@@ -37,6 +38,8 @@ const state = {
   lastBrowserCaptureId: ""
 };
 
+const UI_STATE_KEY = "carbonet-codex-ui-state";
+
 async function api(url, options = {}) {
   const response = await fetch(url, {
     headers: { "Content-Type": "application/json" },
@@ -53,6 +56,40 @@ function byId(id) {
   return document.getElementById(id);
 }
 
+function loadUiState() {
+  try {
+    const raw = window.localStorage.getItem(UI_STATE_KEY);
+    if (!raw) {
+      return;
+    }
+    const doc = JSON.parse(raw);
+    if (doc && typeof doc === "object") {
+      if (doc.sessionPanelOpen && typeof doc.sessionPanelOpen === "object") {
+        state.sessionPanelOpen = {
+          ...state.sessionPanelOpen,
+          ...doc.sessionPanelOpen
+        };
+      }
+      if (doc.selectedPlanStepBySession && typeof doc.selectedPlanStepBySession === "object") {
+        state.selectedPlanStepBySession = doc.selectedPlanStepBySession;
+      }
+    }
+  } catch (_error) {
+    // Ignore invalid local UI state.
+  }
+}
+
+function persistUiState() {
+  try {
+    window.localStorage.setItem(UI_STATE_KEY, JSON.stringify({
+      sessionPanelOpen: state.sessionPanelOpen,
+      selectedPlanStepBySession: state.selectedPlanStepBySession || {}
+    }));
+  } catch (_error) {
+    // Ignore localStorage failures.
+  }
+}
+
 function syncSessionPanelToggles() {
   const mappings = [
     ["plan", "session-plan-view", "toggle-session-plan"],
@@ -65,6 +102,7 @@ function syncSessionPanelToggles() {
     byId(contentId).classList.toggle("is-collapsed", !open);
     byId(buttonId).textContent = open ? "Hide" : "Show";
   });
+  persistUiState();
 }
 
 function escapeHtml(value) {
@@ -170,6 +208,8 @@ function renderSessions(sessions, currentSession) {
   state.sessions = sessions || [];
   state.currentSession = currentSession || null;
   state.selectedSessionId = currentSession?.id || sessions?.[0]?.id || "";
+  const selectedPlanStepBySession = state.selectedPlanStepBySession || {};
+  state.selectedPlanStep = selectedPlanStepBySession[state.selectedSessionId] || state.selectedPlanStep;
   byId("current-session").textContent = state.selectedSessionId
     ? `Active: ${sessionSummaryText(currentSession || {})}`
     : "Active session 없음";
@@ -234,7 +274,12 @@ function renderActivePlanOptions(plan) {
   state.selectedPlanStep = items.some((item) => item.step === state.selectedPlanStep)
     ? state.selectedPlanStep
     : defaultStep;
+  state.selectedPlanStepBySession = {
+    ...(state.selectedPlanStepBySession || {}),
+    [state.selectedSessionId]: state.selectedPlanStep || ""
+  };
   select.value = state.selectedPlanStep || "";
+  persistUiState();
 }
 
 function renderSessionPlanView(plan) {
@@ -313,12 +358,18 @@ function renderSessionTreeView(sessions, currentSessionId) {
 
 async function focusPlanStep(step) {
   state.selectedPlanStep = step || "";
+  state.selectedPlanStepBySession = {
+    ...(state.selectedPlanStepBySession || {}),
+    [state.selectedSessionId]: state.selectedPlanStep || ""
+  };
   byId("active-plan-step").value = state.selectedPlanStep || "";
+  persistUiState();
   const recentJobs = Array.isArray(state.currentSession?.recentJobs) ? state.currentSession.recentJobs : [];
   const match = [...recentJobs].reverse().find((item) => (item.planStep || "") === state.selectedPlanStep);
   if (match?.jobId) {
     await loadJob(match.jobId);
   }
+  await refreshJobs();
 }
 
 async function renderSessionFamilyView(session) {
@@ -1589,6 +1640,7 @@ async function bootstrap() {
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
+  loadUiState();
   byId("run-selected-action").addEventListener("click", runAction);
   byId("run-custom-codex").addEventListener("click", runCustomCodex);
   byId("run-custom-shell").addEventListener("click", runCustomShell);
@@ -1697,6 +1749,14 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
   byId("active-plan-step").addEventListener("change", () => {
     state.selectedPlanStep = byId("active-plan-step").value || "";
+    state.selectedPlanStepBySession = {
+      ...(state.selectedPlanStepBySession || {}),
+      [state.selectedSessionId]: state.selectedPlanStep || ""
+    };
+    persistUiState();
+    refreshJobs().catch((error) => {
+      byId("raw-output").textContent = error instanceof Error ? error.message : String(error);
+    });
   });
   byId("project-build-frontend").addEventListener("click", buildSelectedProjectFrontend);
   byId("project-package-backend").addEventListener("click", packageSelectedProjectBackend);
