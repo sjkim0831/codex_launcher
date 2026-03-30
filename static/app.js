@@ -321,8 +321,18 @@ function renderSessionTreeView(sessions, currentSessionId) {
     const completed = plan.filter((item) => item.status === "completed").length;
     const total = plan.length;
     const running = plan.find((item) => item.status === "in_progress")?.step || "";
-    const recentJobs = Array.isArray(node.recentJobs) ? node.recentJobs.length : 0;
+    const recentJobItems = Array.isArray(node.recentJobs) ? node.recentJobs : [];
+    const recentJobs = recentJobItems.length;
+    const hasFailure = recentJobItems.some((item) => item.status === "failed");
+    const status = hasFailure
+      ? "failed"
+      : running
+        ? "in_progress"
+        : total > 0 && completed === total
+          ? "completed"
+          : "idle";
     return {
+      status,
       planText: total ? `plan ${completed}/${total}` : "plan 없음",
       runningText: running ? `active ${running}` : "",
       jobsText: recentJobs ? `jobs ${recentJobs}` : "jobs 0"
@@ -333,7 +343,7 @@ function renderSessionTreeView(sessions, currentSessionId) {
     const summary = summarizeNode(node);
     return `
       <div class="session-tree-branch">
-        <button class="session-tree-node ${node.id === currentSessionId ? "current" : ""}" data-tree-session-id="${escapeAttribute(node.id)}" type="button">
+        <button class="session-tree-node ${node.id === currentSessionId ? "current" : ""}" data-status="${escapeAttribute(summary.status)}" data-tree-session-id="${escapeAttribute(node.id)}" type="button">
           <strong>${escapeHtml(node.id === currentSessionId ? `Current: ${node.title}` : node.title || node.id)}</strong>
           <div class="session-tree-meta">
             <span class="pill">${escapeHtml(summary.planText)}</span>
