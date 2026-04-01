@@ -16,6 +16,7 @@ if [[ ! -x "$VENV_DIR/bin/python" ]]; then
 fi
 
 export PYTHONPATH="$FREEAGENT_HOME${PYTHONPATH:+:$PYTHONPATH}"
+export FREEAGENT_ENV_FILE="${FREEAGENT_ENV_FILE:-$SCRIPT_DIR/.env.freeagent}"
 STATE_KEY="$(pwd | tr '/ :' '___')"
 export FREEAGENT_STATE_ROOT="${FREEAGENT_STATE_ROOT:-/tmp/carbonet-freeagent-state/${USER:-user}/$STATE_KEY}"
 exec "$VENV_DIR/bin/python" -m freeagent.cli "$@"

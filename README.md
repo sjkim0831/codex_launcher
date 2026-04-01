@@ -70,6 +70,7 @@ http://localhost:43110
 - `data/job-history.jsonl`: 레거시 포함 전체 실행 이력
 - `data/current-session.txt`: 현재 활성 session id
 - `data/accounts/<slot>`: Codex 로그인 슬롯
+- `.env.freeagent`: launcher 전용 FreeAgent runtime 설정 파일 (`.gitignore` 대상)
 
 재시작 동작:
 
@@ -104,6 +105,8 @@ http://localhost:43110
 - `Branch Navigation`: 부모/형제 브랜치 빠른 이동
 - `Compare`: 부모 session 대비 notes diff / changed steps / new jobs
 - `Jobs`: 현재 session 기준 실행 이력
+- `FreeAgent`: `Setup FreeAgent`, `Start Agent`, `Pull Model` 버튼으로 런타임 준비와 모델 다운로드 수행
+- `Composer`: `AI CLI = FreeAgent` 선택 시 `prompt / plan / explain / apply` 모드와 `targets / test command` 입력 지원
 
 세션 패널의 `Plan Status`, `Session Tree`, `Branch Navigation`, `Compare`는 각각 접고 펼칠 수 있다.
 

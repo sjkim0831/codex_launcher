@@ -6,7 +6,7 @@ from pathlib import Path
 from rich.console import Console
 from rich.panel import Panel
 
-from freeagent.models import ApplyResult, ExplainResult, Plan, PlanStep
+from freeagent.models import ApplyResult, AskResult, ExplainResult, Plan, PlanStep
 from freeagent.patch_engine import build_patch, patch_file
 from freeagent.provider_manager import ProviderManager
 from freeagent.safety import classify_risk_for_command, protected_path
@@ -15,7 +15,7 @@ from freeagent.tools.approval import ask_second_approval, ask_user_approval
 from freeagent.tools.file_tools import read_file, write_file
 from freeagent.tools.inspect_tools import inspect_errors
 from freeagent.tools.shell_tools import run_tests
-from freeagent.utils.project_scan import choose_files, summarize_project
+from freeagent.utils.project_scan import _goal_is_low_signal, _extract_goal_keywords, choose_files, summarize_project
 
 console = Console()
 
@@ -52,6 +52,60 @@ class Orchestrator:
                     resp, provider = self.providers.generate(prompt)
                     return ExplainResult(path=f, symbol=symbol, summary=resp, details={"provider": provider})
         return ExplainResult(path=None, symbol=symbol, summary="No matching target or symbol found.")
+
+    def ask(self, goal: str, targets: list[str] | None = None) -> AskResult:
+        summary, candidates = self.scan(goal, targets)
+        tokens = _extract_goal_keywords(goal)
+        compact = goal.strip().replace(" ", "").lower()
+        if _goal_is_low_signal(goal, tokens) and compact in {"됨?", "되나?", "가능?", "돼?", "되냐?", "ok?", "works?", "possible?"}:
+            return AskResult(
+                answer="요청이 너무 짧거나 모호해서 바로 답변하기 어렵습니다. 예: '센서 목록 화면 구조를 설계해줘'처럼 목표를 구체적으로 적어주세요.",
+                provider="guard",
+                details={
+                    "stack": summary.stack,
+                    "targets": [],
+                    "candidate_files": [],
+                },
+            )
+        selected = targets or [c.path for c in candidates[:2]]
+        prompt_lines = [
+            "You are helping with a software project.",
+            "Answer directly and keep it concise.",
+            "Do not edit files.",
+            "Prefer practical guidance on UI structure, state flow, API flow, and UX.",
+            "Limit the answer to 8 short bullets or fewer.",
+            f"Request: {goal}",
+            f"Detected stack: {summary.stack}",
+        ]
+        if selected:
+            prompt_lines.append("Relevant targets:")
+            prompt_lines.extend(f"- {path}" for path in selected)
+        if candidates:
+            prompt_lines.append("Candidate files:")
+            prompt_lines.extend(
+                f"- {item.path}"
+                for item in candidates[:3]
+            )
+        sample_summaries = []
+        for path in selected[:2]:
+            preview = summary.summaries.get(path)
+            if preview:
+                compact_preview = " ".join(str(preview).split())[:240]
+                sample_summaries.append(f"- {compact_preview}")
+        if sample_summaries:
+            prompt_lines.append("Context:")
+            prompt_lines.extend(sample_summaries)
+        prompt_lines.append("Do not propose file edits unless explicitly asked.")
+        resp, provider = self.providers.generate("\n".join(prompt_lines))
+        return AskResult(
+            answer=resp,
+            provider=provider,
+            details={
+                "stack": summary.stack,
+                "targets": selected,
+                "candidate_files": [c.path for c in candidates[:3]],
+            },
+        )
 
     def scan(self, goal: str, targets: list[str] | None = None):
         summary = summarize_project(".")

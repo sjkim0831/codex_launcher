@@ -4,6 +4,19 @@ from pathlib import Path
 from typing import Iterable
 
 TEXT_SUFFIXES = {".py", ".js", ".jsx", ".ts", ".tsx", ".java", ".json", ".md", ".txt", ".yml", ".yaml", ".sh"}
+IGNORED_DIR_NAMES = {
+    ".git",
+    ".venv",
+    ".freeagent",
+    "__pycache__",
+    "node_modules",
+    "dist",
+    "build",
+    "target",
+    "boot-inf",
+    "out",
+    "coverage",
+}
 
 def is_text_file(path: Path) -> bool:
     return path.suffix.lower() in TEXT_SUFFIXES
@@ -18,7 +31,8 @@ def list_files(root: str = ".") -> list[str]:
     base = Path(root)
     out = []
     for p in base.rglob("*"):
-        if p.is_file() and ".git" not in p.parts and ".venv" not in p.parts and ".freeagent" not in p.parts and is_text_file(p):
+        parts = {part.lower() for part in p.parts}
+        if p.is_file() and not (parts & IGNORED_DIR_NAMES) and is_text_file(p):
             out.append(str(p))
     return sorted(out)
 

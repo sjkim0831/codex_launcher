@@ -6,6 +6,7 @@ import json
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import threading
 import time
@@ -180,6 +181,8 @@ class LauncherApp:
             "cliOptions": [
                 {"id": "codex", "label": "Codex", "description": "OpenAI Codex CLI"},
                 {"id": "freeagent", "label": "FreeAgent", "description": "Vendored FreeAgent Ultra"},
+                {"id": "minimax", "label": "MiniMax 2.7", "description": "FreeAgent runtime with MiniMax provider"},
+                {"id": "minimax-codex", "label": "MiniMax Codex Compat", "description": "Codex-like exec wrapper backed by MiniMax"},
             ],
             "freeagent": self.freeagent_config(),
             "browser": self.browser_status(),
@@ -579,6 +582,17 @@ class LauncherApp:
             return collapsed
         return collapsed[: limit - 3].rstrip() + "..."
 
+    def summarize_job_message(self, text: str, limit: int = 220) -> str:
+        collapsed = self.summarize_text(text, limit * 3)
+        lowered = collapsed.lower()
+        if "no such command 'prompt'" in lowered:
+            return "freeagent prompt command was unavailable in that run"
+        if "usage: python -m freeagent.cli" in lowered:
+            return "freeagent cli usage error"
+        if any(marker in collapsed for marker in ("╭", "│", "children:[", "md:grid-cols", "export{")):
+            return "verbose tool output omitted"
+        return self.summarize_text(collapsed, limit)
+
     def refresh_session_summary(self, session_doc: dict[str, Any]) -> None:
         recent_jobs = session_doc.get("recentJobs", [])
         lines: list[str] = []
@@ -595,7 +609,7 @@ class LauncherApp:
             if compact:
                 lines.append(f"Plan: {self.summarize_text(compact, 240)}")
         for item in recent_jobs[-6:]:
-            summary = self.summarize_text(safe_text(item.get("finalMessage")) or safe_text(item.get("commandPreview")), 220)
+            summary = self.summarize_job_message(safe_text(item.get("finalMessage")) or safe_text(item.get("commandPreview")), 220)
             status = safe_text(item.get("status")) or "unknown"
             title = safe_text(item.get("title")) or safe_text(item.get("jobId"))
             lines.append(f"- {title} [{status}]: {summary}")
@@ -688,7 +702,7 @@ class LauncherApp:
                 "cwd": job.cwd,
                 "commandPreview": job.command_preview,
                 "endedAt": job.ended_at,
-                "finalMessage": self.summarize_text(job.final_message or job.output, 1000),
+                "finalMessage": self.summarize_job_message(job.final_message or job.output, 320),
             }
         )
         session["recentJobs"] = recent_jobs[-8:]
@@ -728,7 +742,7 @@ class LauncherApp:
             lines.append("Recent Outputs:")
             for item in recent_jobs[-3:]:
                 lines.append(
-                    f"- {safe_text(item.get('title'))}: {self.summarize_text(safe_text(item.get('finalMessage')), 220)}"
+                    f"- {safe_text(item.get('title'))}: {self.summarize_job_message(safe_text(item.get('finalMessage')), 160)}"
                 )
         lines.extend(
             [
@@ -738,6 +752,88 @@ class LauncherApp:
             ]
         )
         return "\n".join(lines)
+
+    def build_apply_context(self, session: dict[str, Any]) -> str:
+        lines = [
+            "[Session Context]",
+            f"Session: {safe_text(session.get('title'))}",
+        ]
+        if session.get("workspaceId"):
+            lines.append(f"Workspace: {safe_text(session.get('workspaceId'))}")
+        summary = safe_text(session.get("summary")).strip()
+        if summary:
+            lines.append("Recent Decisions:")
+            lines.append(self.summarize_text(summary, 240))
+        recent_jobs = session.get("recentJobs", [])
+        if recent_jobs:
+            lines.append("Recent Outputs:")
+            for item in recent_jobs[-1:]:
+                title = safe_text(item.get("title")).strip()
+                final_message = self.summarize_text(safe_text(item.get("finalMessage")), 160)
+                if title or final_message:
+                    lines.append(f"- {title}: {final_message}")
+        lines.extend(
+            [
+                "",
+                "Use only the relevant prior context. Ignore prior logs that do not directly help with the current edit request.",
+                "",
+            ]
+        )
+        return "\n".join(lines)
+
+    def is_question_like_prompt(self, prompt: str) -> bool:
+        text = safe_text(prompt).strip().lower()
+        if not text:
+            return True
+        if "?" in text:
+            return True
+        question_markers = (
+            "what",
+            "how",
+            "why",
+            "can i",
+            "can we",
+            "could",
+            "should",
+            "is it",
+            "are there",
+            "뭐",
+            "무엇",
+            "뭘",
+            "어떻게",
+            "왜",
+            "가능",
+            "할 수 있",
+            "되나",
+            "되나요",
+            "있나",
+            "있나요",
+        )
+        action_markers = (
+            "fix",
+            "change",
+            "update",
+            "implement",
+            "add",
+            "remove",
+            "refactor",
+            "replace",
+            "return",
+            "show",
+            "rename",
+            "수정",
+            "변경",
+            "추가",
+            "삭제",
+            "개선",
+            "리팩토링",
+            "교체",
+            "반환",
+            "표시",
+        )
+        if any(marker in text for marker in question_markers) and not any(marker in text for marker in action_markers):
+            return True
+        return False
 
     def codex_home(self) -> Path:
         return Path(os.environ.get("CARBONET_CODEX_HOME", str(Path.home() / ".codex")))
@@ -755,20 +851,173 @@ class LauncherApp:
         return self.app_root / "vendors" / "freeagent_ultra"
 
     def freeagent_env_file(self) -> Path:
+        return self.app_root / ".env.freeagent"
+
+    def freeagent_legacy_env_file(self) -> Path:
         return self.freeagent_home() / ".env.freeagent"
 
     def freeagent_bin(self) -> str:
         return str(self.app_root / "bin" / "carbonet-freeagent")
 
+    def freeagent_venv_dir(self) -> Path:
+        return self.app_root / "runtime" / "freeagent-venv"
+
+    def freeagent_python(self) -> Path:
+        return self.freeagent_venv_dir() / "bin" / "python"
+
+    def freeagent_write_env(self, model: str = "qwen2.5-coder:7b") -> None:
+        self.freeagent_home().mkdir(parents=True, exist_ok=True)
+        current = read_key_values(self.freeagent_env_file())
+        if not current and self.freeagent_legacy_env_file().exists():
+            current = read_key_values(self.freeagent_legacy_env_file())
+        merged = {
+            "FREEAGENT_PROVIDER": current.get("FREEAGENT_PROVIDER", "ollama"),
+            "FREEAGENT_MODEL": current.get("FREEAGENT_MODEL", model),
+            "OLLAMA_HOST": current.get("OLLAMA_HOST", "http://127.0.0.1:11434"),
+            "OLLAMA_TIMEOUT_SEC": current.get("OLLAMA_TIMEOUT_SEC", "90"),
+            "OLLAMA_NUM_PREDICT": current.get("OLLAMA_NUM_PREDICT", "256"),
+            "OPENAI_BASE_URL": current.get("OPENAI_BASE_URL", ""),
+            "OPENAI_API_KEY": current.get("OPENAI_API_KEY", ""),
+            "FREEAGENT_MINIMAX_MODEL": current.get("FREEAGENT_MINIMAX_MODEL", "minimax2.7"),
+            "MINIMAX_BASE_URL": current.get("MINIMAX_BASE_URL", "https://api.minimaxi.chat/v1"),
+            "MINIMAX_API_KEY": current.get("MINIMAX_API_KEY", ""),
+        }
+        body = "\n".join(f"{key}={value}" for key, value in merged.items()) + "\n"
+        self.freeagent_env_file().write_text(body, encoding="utf-8")
+
+    def freeagent_provider(self) -> str:
+        provider = read_key_values(self.freeagent_env_file()).get("FREEAGENT_PROVIDER", "ollama").strip()
+        if provider == "minimax2.7":
+            return "minimax"
+        return provider or "ollama"
+
+    def run_sudo(self, args: list[str], sudo_password: str, cwd: str | None = None) -> subprocess.CompletedProcess[str]:
+        if not sudo_password:
+            raise ValueError("sudo password is required for system installation")
+        return subprocess.run(
+            ["sudo", "-S", *args],
+            input=f"{sudo_password}\n",
+            text=True,
+            capture_output=True,
+            cwd=cwd,
+            check=True,
+        )
+
+    def ensure_ollama_installed(self, sudo_password: str) -> list[str]:
+        messages: list[str] = []
+        if shutil.which("zstd") is None:
+            self.run_sudo(["apt-get", "update"], sudo_password)
+            self.run_sudo(["apt-get", "install", "-y", "zstd"], sudo_password)
+            messages.append("installed zstd")
+        if shutil.which("ollama") is None:
+            self.run_sudo(["bash", "-lc", "curl -fsSL https://ollama.com/install.sh | sh"], sudo_password)
+            messages.append("installed ollama")
+        return messages
+
+    def ollama_running(self, host: str = "http://127.0.0.1:11434") -> bool:
+        try:
+            with urlopen(f"{host}/api/version", timeout=2) as response:
+                return response.status == 200
+        except Exception:
+            return False
+
+    def ollama_tags(self, host: str = "http://127.0.0.1:11434") -> dict[str, Any]:
+        try:
+            with urlopen(f"{host}/api/tags", timeout=5) as response:
+                return json.loads(response.read().decode("utf-8"))
+        except Exception:
+            return {"models": []}
+
+    def freeagent_setup_runtime(self, model: str = "qwen2.5-coder:7b", sudo_password: str = "") -> list[str]:
+        messages: list[str] = []
+        home = self.freeagent_home()
+        if not (home / "freeagent").exists():
+            raise ValueError(f"FreeAgent source not found: {home}")
+        provider = self.freeagent_provider()
+        if provider == "ollama" and shutil.which("ollama") is None:
+            if not sudo_password:
+                raise ValueError("ollama is missing. Enter sudo password and run Setup FreeAgent again.")
+            messages.extend(self.ensure_ollama_installed(sudo_password))
+        python = self.freeagent_python()
+        if not python.exists():
+            self.freeagent_venv_dir().mkdir(parents=True, exist_ok=True)
+            subprocess.run(["python3", "-m", "venv", str(self.freeagent_venv_dir())], check=True)
+            messages.append("created freeagent venv")
+        subprocess.run([str(python), "-m", "pip", "install", "--upgrade", "pip", "wheel", "setuptools"], cwd=str(home), check=True)
+        subprocess.run([str(python), "-m", "pip", "install", "-e", ".[dev]"], cwd=str(home), check=True)
+        self.freeagent_write_env(model=model)
+        messages.append("installed freeagent runtime")
+        messages.append("wrote .env.freeagent")
+        return messages
+
+    def start_ollama_service(self, host: str = "http://127.0.0.1:11434") -> dict[str, Any]:
+        if self.ollama_running(host):
+            return {"ok": True, "message": "ollama already running"}
+        if shutil.which("ollama") is None:
+            return {"ok": False, "message": "ollama not installed on system"}
+        subprocess.Popen(
+            ["ollama", "serve"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+        time.sleep(2)
+        return {
+            "ok": self.ollama_running(host),
+            "message": "ollama started" if self.ollama_running(host) else "ollama start attempted",
+        }
+
     def freeagent_config(self) -> dict[str, Any]:
         env_doc = read_key_values(self.freeagent_env_file())
-        return {
+        provider = env_doc.get("FREEAGENT_PROVIDER", "ollama")
+        if provider == "minimax2.7":
+            provider = "minimax"
+        host = env_doc.get("OLLAMA_HOST", "http://127.0.0.1:11434")
+        ollama_model = env_doc.get("FREEAGENT_MODEL", "qwen2.5-coder:7b")
+        minimax_model = env_doc.get("FREEAGENT_MINIMAX_MODEL", "minimax2.7")
+        ollama_running = self.ollama_running(host)
+        tags = self.ollama_tags(host) if ollama_running else {"models": []}
+        ollama_installed = shutil.which("ollama") is not None
+        minimax_key_ready = bool(env_doc.get("MINIMAX_API_KEY", "") or env_doc.get("OPENAI_API_KEY", ""))
+        runtime_ready = self.freeagent_python().exists()
+        shared = {
             "installed": self.freeagent_home().exists(),
             "home": str(self.freeagent_home()),
-            "provider": env_doc.get("FREEAGENT_PROVIDER", "ollama"),
-            "model": env_doc.get("FREEAGENT_MODEL", "qwen2.5-coder:7b"),
-            "ollamaHost": env_doc.get("OLLAMA_HOST", "http://127.0.0.1:11434"),
+            "venvReady": runtime_ready,
+            "cliReady": Path(self.freeagent_bin()).exists(),
+            "envReady": self.freeagent_env_file().exists(),
+        }
+        ollama_status = {
+            **shared,
+            "provider": "ollama",
+            "model": ollama_model,
+            "host": host,
+            "installedOnSystem": ollama_installed,
+            "running": ollama_running,
+            "modelReady": any(item.get("name") == ollama_model for item in tags.get("models", [])),
+        }
+        minimax_status = {
+            **shared,
+            "provider": "minimax",
+            "model": minimax_model,
+            "baseUrl": env_doc.get("MINIMAX_BASE_URL", "https://api.minimaxi.chat/v1"),
+            "keyReady": minimax_key_ready,
+            "modelReady": minimax_key_ready and bool(minimax_model),
+        }
+        active = minimax_status if provider == "minimax" else ollama_status
+        return {
+            **shared,
+            "provider": provider,
+            "model": active["model"],
+            "ollamaHost": host,
             "openaiBaseUrl": env_doc.get("OPENAI_BASE_URL", ""),
+            "minimaxBaseUrl": env_doc.get("MINIMAX_BASE_URL", "https://api.minimaxi.chat/v1"),
+            "minimaxKeyReady": minimax_key_ready,
+            "ollamaInstalled": ollama_installed,
+            "ollamaRunning": ollama_running,
+            "modelReady": active["modelReady"],
+            "ollama": ollama_status,
+            "minimax": minimax_status,
         }
 
     def codex_version(self) -> str:
@@ -1904,30 +2153,90 @@ class LauncherApp:
                 job.process.terminate()
         return self.get_job(job_id)
 
+    def setup_freeagent(self, model: str = "qwen2.5-coder:7b", sudo_password: str = "") -> dict[str, Any]:
+        messages = self.freeagent_setup_runtime(model=model, sudo_password=sudo_password)
+        return {
+            "ok": True,
+            "message": "; ".join(messages),
+            "freeagent": self.freeagent_config(),
+        }
+
+    def start_freeagent_agent(self) -> dict[str, Any]:
+        if self.freeagent_provider() != "ollama":
+            return {
+                "ok": True,
+                "message": "external provider configured; no local agent start needed",
+                "freeagent": self.freeagent_config(),
+            }
+        status = self.start_ollama_service()
+        status["freeagent"] = self.freeagent_config()
+        return status
+
+    def pull_freeagent_model(self, payload: dict[str, Any]) -> dict[str, Any]:
+        model = safe_text(payload.get("model")).strip() or self.freeagent_config().get("model", "qwen2.5-coder:7b")
+        if self.freeagent_provider() != "ollama":
+            raise ValueError("Model pull is only available for Ollama-backed FreeAgent.")
+        workspace = self.resolve_workspace(payload)
+        session = self.resolve_session(payload, workspace)
+        return self.enqueue_job_spec(
+            title=f"FreeAgent Pull Model [{model}]",
+            kind="freeagent",
+            cwd=safe_text(workspace["path"]),
+            command=["ollama", "pull", model],
+            command_preview=f"ollama pull {model}",
+            workspace=workspace,
+            session=session,
+            plan_step=safe_text(payload.get("planStep")).strip(),
+        )
+
     def run_job(self, payload: dict[str, Any]) -> dict[str, Any]:
         workspace = self.resolve_workspace(payload)
         session = self.resolve_session(payload, workspace)
         spec = self.build_spec(payload, workspace, session)
+        return self.enqueue_job_spec(
+            title=spec["title"],
+            kind=spec["kind"],
+            cwd=spec["cwd"],
+            command=spec["command"],
+            command_preview=spec["command_preview"],
+            workspace=workspace,
+            session=session,
+            plan_step=safe_text(payload.get("planStep")).strip(),
+            env_overrides=spec.get("env_overrides"),
+        )
+
+    def enqueue_job_spec(
+        self,
+        title: str,
+        kind: str,
+        cwd: str,
+        command: list[str],
+        command_preview: str,
+        workspace: dict[str, Any],
+        session: dict[str, Any],
+        plan_step: str = "",
+        env_overrides: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
         job_id = uuid.uuid4().hex[:12]
         output_file = self.jobs_root / f"{job_id}-final.txt"
         job = JobRecord(
             job_id=job_id,
-            title=spec["title"],
-            kind=spec["kind"],
+            title=title,
+            kind=kind,
             session_id=safe_text(session.get("id")),
             session_title=safe_text(session.get("title")),
-            plan_step=safe_text(payload.get("planStep")).strip(),
+            plan_step=plan_step,
             workspace_id=workspace["id"],
             workspace_label=workspace["label"],
-            cwd=spec["cwd"],
-            command_preview=spec["command_preview"],
+            cwd=cwd,
+            command_preview=command_preview,
             output_file=str(output_file),
         )
         with self.lock:
             self.jobs[job_id] = job
         thread = threading.Thread(
             target=self._execute_job,
-            args=(job_id, spec["command"], output_file),
+            args=(job_id, command, output_file, env_overrides),
             daemon=True,
         )
         thread.start()
@@ -1959,12 +2268,24 @@ class LauncherApp:
             if not prompt:
                 raise ValueError("Prompt is required.")
             cli_id = safe_text(payload.get("cli")) or "codex"
-            if cli_id == "freeagent":
-                return self.build_freeagent_spec(
-                    title="Custom FreeAgent Prompt",
+            if cli_id == "minimax-codex":
+                return self.build_minimax_codex_spec(
+                    title="Custom MiniMax Codex Prompt",
                     workspace=workspace,
                     session=session,
                     prompt=prompt,
+                    full_auto=True,
+                )
+            if cli_id in {"freeagent", "minimax"}:
+                return self.build_freeagent_spec(
+                    title="Custom MiniMax Prompt" if cli_id == "minimax" else "Custom FreeAgent Prompt",
+                    workspace=workspace,
+                    session=session,
+                    prompt=prompt,
+                    freeagent_mode=safe_text(payload.get("freeagentMode")) or "prompt",
+                    freeagent_targets=safe_text(payload.get("freeagentTargets")).strip(),
+                    freeagent_test_command=safe_text(payload.get("freeagentTestCommand")).strip(),
+                    provider_override="minimax" if cli_id == "minimax" else "",
                 )
             return self.build_codex_spec(
                 title="Custom Codex Prompt",
@@ -2081,29 +2402,108 @@ class LauncherApp:
             "command_preview": shlex.join(command),
         }
 
-    def build_freeagent_spec(self, title: str, workspace: dict[str, Any], session: dict[str, Any], prompt: str) -> dict[str, Any]:
+    def build_minimax_codex_spec(
+        self,
+        title: str,
+        workspace: dict[str, Any],
+        session: dict[str, Any],
+        prompt: str,
+        full_auto: bool,
+    ) -> dict[str, Any]:
+        cwd = safe_text(workspace["path"])
+        sandbox = safe_text(workspace.get("defaultSandbox")) or "workspace-write"
+        effective_prompt = f"{self.build_session_context(session)}{prompt}"
+        wrapper = self.app_root / "bin" / "carbonet-minimax-codex"
+        command = [
+            str(wrapper),
+            "exec",
+            "--color",
+            "never",
+            "--skip-git-repo-check",
+            "-C",
+            cwd,
+            "--sandbox",
+            sandbox,
+        ]
+        if full_auto:
+            command.append("--full-auto")
+        command.append(effective_prompt)
+        return {
+            "title": title,
+            "kind": "codex",
+            "cwd": cwd,
+            "command": command,
+            "command_preview": shlex.join(command),
+        }
+
+    def build_freeagent_spec(
+        self,
+        title: str,
+        workspace: dict[str, Any],
+        session: dict[str, Any],
+        prompt: str,
+        freeagent_mode: str = "prompt",
+        freeagent_targets: str = "",
+        freeagent_test_command: str = "",
+        provider_override: str = "",
+    ) -> dict[str, Any]:
         freeagent_home = self.freeagent_home()
         if not freeagent_home.exists():
             raise ValueError(f"FreeAgent source not found: {freeagent_home}")
         wrapper = Path(self.freeagent_bin())
         if not wrapper.exists():
             raise ValueError(f"FreeAgent launcher not found: {wrapper}")
-        command = [str(wrapper), "plan", f"{self.build_session_context(session)}{prompt}"]
+        mode = freeagent_mode if freeagent_mode in {"prompt", "plan", "ask", "explain", "apply"} else "prompt"
+        if mode == "apply" and self.is_question_like_prompt(prompt):
+            raise ValueError("FreeAgent apply requires a concrete edit request. Use prompt or plan for questions.")
+        if mode == "apply":
+            effective_prompt = f"{self.build_apply_context(session)}{prompt}"
+        elif mode in {"prompt", "plan", "ask", "explain"}:
+            effective_prompt = prompt
+        else:
+            effective_prompt = f"{self.build_session_context(session)}{prompt}"
+        command = [str(wrapper), mode]
+        if mode == "explain":
+            if freeagent_targets:
+                command.extend(["--targets", freeagent_targets])
+            else:
+                command.extend(["--symbol", prompt])
+        else:
+            command.append(effective_prompt)
+            if freeagent_targets:
+                command.extend(["--targets", freeagent_targets])
+            if mode == "apply":
+                command.append("--yes")
+                if freeagent_test_command:
+                    command.extend(["--test-command", freeagent_test_command])
+        env_overrides: dict[str, str] = {}
+        if provider_override == "minimax":
+            env_doc = read_key_values(self.freeagent_env_file())
+            env_overrides = {
+                "FREEAGENT_PROVIDER": "minimax",
+                "FREEAGENT_MODEL": env_doc.get("FREEAGENT_MINIMAX_MODEL", "minimax2.7"),
+                "MINIMAX_BASE_URL": env_doc.get("MINIMAX_BASE_URL", "https://api.minimaxi.chat/v1"),
+                "MINIMAX_API_KEY": env_doc.get("MINIMAX_API_KEY", ""),
+            }
         return {
-            "title": title,
+            "title": f"{title} [{mode}]",
             "kind": "freeagent",
             "cwd": safe_text(workspace["path"]),
             "command": command,
             "command_preview": shlex.join(command),
+            "env_overrides": env_overrides,
         }
 
-    def _execute_job(self, job_id: str, command: list[str], output_file: Path) -> None:
+    def _execute_job(self, job_id: str, command: list[str], output_file: Path, env_overrides: dict[str, str] | None = None) -> None:
         with self.lock:
             job = self.jobs[job_id]
         try:
             effective_command = list(command)
             if job.kind == "codex":
                 effective_command.extend(["-o", str(output_file)])
+            env = os.environ.copy()
+            if env_overrides:
+                env.update({key: value for key, value in env_overrides.items() if value})
             process = subprocess.Popen(
                 effective_command,
                 cwd=job.cwd,
@@ -2111,7 +2511,7 @@ class LauncherApp:
                 stderr=subprocess.STDOUT,
                 text=True,
                 bufsize=1,
-                env=os.environ.copy(),
+                env=env,
             )
             with self.lock:
                 job.command_preview = shlex.join(effective_command)
@@ -2391,6 +2791,23 @@ class LauncherHandler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/api/login-status":
             self.write_json(HTTPStatus.OK, self.app.login_status())
+            return
+        if parsed.path == "/api/freeagent/setup":
+            try:
+                model = safe_text(payload.get("model")).strip() or "qwen2.5-coder:7b"
+                sudo_password = safe_text(payload.get("sudoPassword"))
+                self.write_json(HTTPStatus.OK, self.app.setup_freeagent(model, sudo_password=sudo_password))
+            except (ValueError, subprocess.CalledProcessError) as exc:
+                self.write_json(HTTPStatus.BAD_REQUEST, {"message": str(exc)})
+            return
+        if parsed.path == "/api/freeagent/start":
+            self.write_json(HTTPStatus.OK, self.app.start_freeagent_agent())
+            return
+        if parsed.path == "/api/freeagent/pull-model":
+            try:
+                self.write_json(HTTPStatus.OK, self.app.pull_freeagent_model(payload))
+            except ValueError as exc:
+                self.write_json(HTTPStatus.BAD_REQUEST, {"message": str(exc)})
             return
         if parsed.path == "/api/login/start":
             self.write_json(HTTPStatus.OK, self.app.start_device_login())

@@ -129,6 +129,10 @@
               <strong id="freeagent-model">checking...</strong>
             </div>
             <div class="status-pill">
+              <span>MiniMax</span>
+              <strong id="minimax-model">checking...</strong>
+            </div>
+            <div class="status-pill">
               <span>Login</span>
               <strong id="login-status">checking...</strong>
             </div>
@@ -136,8 +140,13 @@
               <span>Runtime</span>
               <strong id="runtime-context">checking...</strong>
             </div>
+            <input id="freeagent-sudo-password" type="password" placeholder="sudo password (one-time)">
+            <button id="freeagent-setup" class="ghost-button" type="button">Setup FreeAgent</button>
+            <button id="freeagent-start" class="ghost-button" type="button">Start Agent / Check Provider</button>
+            <button id="freeagent-pull-model" class="ghost-button" type="button">Pull Ollama Model</button>
             <button id="refresh-login" class="ghost-button" type="button">Login Check</button>
           </div>
+          <p id="freeagent-status-note" class="muted inline-note">FreeAgent 상태 확인 중. sudo 비밀번호는 설치 요청 1회에만 사용되고 저장하지 않습니다.</p>
         </section>
 
         <section class="panel browser-panel">
@@ -318,6 +327,27 @@
               <select id="assistant-cli"></select>
             </div>
 
+            <div class="field-row" id="freeagent-mode-row">
+              <label for="freeagent-mode">FreeAgent Mode</label>
+              <select id="freeagent-mode">
+                <option value="prompt">prompt</option>
+                <option value="plan">plan</option>
+                <option value="ask">ask</option>
+                <option value="explain">explain</option>
+                <option value="apply">apply</option>
+              </select>
+            </div>
+
+            <div class="field-row" id="freeagent-targets-row">
+              <label for="freeagent-targets">FreeAgent Targets</label>
+              <input id="freeagent-targets" type="text" placeholder="예: src/App.tsx,auth.py 또는 login_user">
+            </div>
+
+            <div class="field-row" id="freeagent-test-command-row">
+              <label for="freeagent-test-command">FreeAgent Test</label>
+              <input id="freeagent-test-command" type="text" placeholder="예: pytest -q 또는 npm test">
+            </div>
+
             <div class="field-row">
               <label for="custom-codex-prompt">AI Prompt</label>
               <textarea id="custom-codex-prompt" placeholder="실행할 Codex 또는 FreeAgent 프롬프트를 입력하세요"></textarea>
@@ -356,9 +386,10 @@
 
           <div class="panel output-panel">
             <div class="panel-head">
-              <h2>Codex Final</h2>
+              <h2>Final Output</h2>
+              <button id="copy-final-output" class="ghost-button" type="button">Copy</button>
             </div>
-            <pre id="final-output" class="console-output">Codex 최종 응답이 여기에 표시됩니다.</pre>
+            <pre id="final-output" class="console-output">최종 응답이 여기에 표시됩니다.</pre>
           </div>
 
           <div class="panel output-panel wide">

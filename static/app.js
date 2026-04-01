@@ -14,6 +14,7 @@ const state = {
     compare: true
   },
   selectedCli: "codex",
+  selectedFreeAgentMode: "prompt",
   sessions: [],
   currentSession: null,
   referenceRoots: [],
@@ -54,6 +55,30 @@ async function api(url, options = {}) {
 
 function byId(id) {
   return document.getElementById(id);
+}
+
+async function copyTextToClipboard(text) {
+  const value = String(text || "");
+  if (!value.trim()) {
+    throw new Error("복사할 출력이 없습니다.");
+  }
+  await navigator.clipboard.writeText(value);
+}
+
+async function copyFinalOutput() {
+  const button = byId("copy-final-output");
+  const originalLabel = button.textContent;
+  try {
+    await copyTextToClipboard(byId("final-output").textContent);
+    button.textContent = "Copied";
+  } catch (error) {
+    button.textContent = "Copy Failed";
+    alert(error instanceof Error ? error.message : String(error));
+  } finally {
+    window.setTimeout(() => {
+      button.textContent = originalLabel;
+    }, 1200);
+  }
 }
 
 function loadUiState() {
@@ -577,18 +602,62 @@ function renderCliOptions() {
     state.selectedCli = target.value || "codex";
     syncAssistantNote();
   });
+  const freeagentMode = byId("freeagent-mode");
+  freeagentMode.value = state.selectedFreeAgentMode || "prompt";
+  freeagentMode.addEventListener("change", () => {
+    state.selectedFreeAgentMode = freeagentMode.value || "prompt";
+    syncAssistantNote();
+  });
   syncAssistantNote();
+}
+
+function syncFreeAgentControls() {
+  const isFreeAgent = state.selectedCli === "freeagent" || state.selectedCli === "minimax";
+  byId("freeagent-mode-row").hidden = !isFreeAgent;
+  byId("freeagent-targets-row").hidden = !isFreeAgent;
+  byId("freeagent-test-command-row").hidden = !isFreeAgent || state.selectedFreeAgentMode !== "apply";
 }
 
 function syncAssistantNote() {
   const freeagent = state.bootstrap?.freeagent || {};
-  if (state.selectedCli === "freeagent") {
+  if (state.selectedCli === "minimax-codex") {
+    byId("assistant-note").textContent = "MiniMax Codex Compat는 Codex exec 문법 일부를 MiniMax-backed FreeAgent로 매핑합니다.";
+    syncFreeAgentControls();
+    return;
+  }
+  if (state.selectedCli === "freeagent" || state.selectedCli === "minimax") {
+    const modeText = state.selectedFreeAgentMode || "prompt";
+    const cliLabel = state.selectedCli === "minimax" ? "MiniMax 2.7" : "FreeAgent";
+    const providerText = state.selectedCli === "minimax" ? "minimax" : (freeagent.provider || "unknown");
+    const modelText = state.selectedCli === "minimax" ? "minimax2.7" : (freeagent.model || "unknown");
     byId("assistant-note").textContent = freeagent.installed
-      ? `FreeAgent provider=${freeagent.provider || "unknown"} model=${freeagent.model || "unknown"}`
-      : "FreeAgent가 아직 설치되지 않았습니다.";
+      ? `${cliLabel} mode=${modeText} provider=${providerText} model=${modelText}`
+      : `${cliLabel} runtime이 아직 설치되지 않았습니다.`;
+    syncFreeAgentControls();
     return;
   }
   byId("assistant-note").textContent = "Codex는 현재 로그인 세션과 workspace sandbox 설정을 사용합니다.";
+  syncFreeAgentControls();
+}
+
+function syncFreeAgentStatus() {
+  const freeagent = state.bootstrap?.freeagent || {};
+  const ollama = freeagent.ollama || {};
+  const minimax = freeagent.minimax || {};
+  if (!freeagent.installed) {
+    byId("freeagent-model").textContent = "not installed";
+    byId("minimax-model").textContent = "not installed";
+    byId("freeagent-status-note").textContent = "FreeAgent source 또는 runtime이 아직 준비되지 않았습니다.";
+    return;
+  }
+  const runtimeText = freeagent.venvReady ? "runtime ready" : "runtime missing";
+  const ollamaAgentText = ollama.running ? "agent on" : ollama.installedOnSystem ? "agent off" : "ollama missing";
+  const ollamaModelText = ollama.modelReady ? "model ready" : "model missing";
+  const minimaxKeyText = minimax.keyReady ? "api key ready" : "api key missing";
+  const minimaxModelText = minimax.model ? "model set" : "model missing";
+  byId("freeagent-model").textContent = `${ollama.provider || "ollama"} · ${ollama.model || "unknown"}`;
+  byId("minimax-model").textContent = `${minimax.provider || "minimax"} · ${minimax.model || "unknown"}`;
+  byId("freeagent-status-note").textContent = `${runtimeText} · FreeAgent: ${ollamaAgentText}, ${ollamaModelText} · MiniMax: ${minimaxKeyText}, ${minimaxModelText}`;
 }
 
 function formatBrowserCapture(capture) {
@@ -1299,7 +1368,7 @@ function setJobDetail(job) {
   byId("job-plan-step").textContent = job.planStep ? `Plan step: ${job.planStep}` : "Plan step: 자동 선택";
   byId("command-preview").textContent = job.commandPreview || "명령 정보가 없습니다.";
   byId("raw-output").textContent = job.output || "출력이 없습니다.";
-  byId("final-output").textContent = job.finalMessage || "Codex 최종 응답이 없습니다.";
+  byId("final-output").textContent = job.finalMessage || "최종 응답이 없습니다.";
 }
 
 async function refreshJobs() {
@@ -1399,6 +1468,9 @@ async function runCustomCodex() {
       projectPath: state.selectedProjectPath,
       mode: "assistant_custom",
       cli: state.selectedCli,
+      freeagentMode: state.selectedFreeAgentMode,
+      freeagentTargets: byId("freeagent-targets").value.trim(),
+      freeagentTestCommand: byId("freeagent-test-command").value.trim(),
       prompt
     })
   });
@@ -1422,6 +1494,58 @@ async function runCustomShell() {
       projectPath: state.selectedProjectPath,
       mode: "shell_custom",
       shellCommand: command
+    })
+  });
+  setJobDetail(payload);
+  await refreshJobs();
+  startPolling(payload.jobId);
+}
+
+async function setupFreeAgent() {
+  const model = prompt("설치할 FreeAgent 기본 모델", state.bootstrap?.freeagent?.model || "qwen2.5-coder:7b");
+  if (!model) {
+    return;
+  }
+  const sudoPassword = byId("freeagent-sudo-password").value;
+  const payload = await api("/api/freeagent/setup", {
+    method: "POST",
+    body: JSON.stringify({ model, sudoPassword })
+  });
+  byId("freeagent-sudo-password").value = "";
+  state.bootstrap.freeagent = payload.freeagent || state.bootstrap.freeagent;
+  syncFreeAgentStatus();
+  syncAssistantNote();
+  alert(payload.message || "FreeAgent setup completed");
+}
+
+async function startFreeAgent() {
+  const payload = await api("/api/freeagent/start", {
+    method: "POST",
+    body: JSON.stringify({})
+  });
+  state.bootstrap.freeagent = payload.freeagent || state.bootstrap.freeagent;
+  syncFreeAgentStatus();
+  syncAssistantNote();
+  alert(payload.message || "FreeAgent start completed");
+}
+
+async function pullFreeAgentModel() {
+  if ((state.bootstrap?.freeagent?.provider || "") !== "ollama") {
+    alert("현재 provider는 Ollama가 아니라서 model pull이 필요 없습니다.");
+    return;
+  }
+  const model = prompt("다운로드할 Ollama 모델", state.bootstrap?.freeagent?.model || "qwen2.5-coder:7b");
+  if (!model) {
+    return;
+  }
+  const payload = await api("/api/freeagent/pull-model", {
+    method: "POST",
+    body: JSON.stringify({
+      sessionId: state.selectedSessionId,
+      planStep: state.selectedPlanStep,
+      workspaceId: state.selectedWorkspaceId,
+      projectPath: state.selectedProjectPath,
+      model
     })
   });
   setJobDetail(payload);
@@ -1623,9 +1747,7 @@ async function bootstrap() {
   state.selectedProjectRootId = state.projectRoots[0]?.id || "";
   byId("reference-section-select").value = state.referenceSection;
   byId("codex-version").textContent = state.bootstrap.codexVersion || "unknown";
-  byId("freeagent-model").textContent = state.bootstrap.freeagent?.installed
-    ? `${state.bootstrap.freeagent.provider || "unknown"} · ${state.bootstrap.freeagent.model || "unknown"}`
-    : "not installed";
+  syncFreeAgentStatus();
   byId("login-status").textContent = state.bootstrap.loginReady ? "ready" : "not ready";
   byId("runtime-context").textContent = state.bootstrap.runtimeRoot?.startsWith("/mnt/")
     ? `WSL path ${state.bootstrap.runtimeRoot}`
@@ -1669,6 +1791,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   byId("run-selected-action").addEventListener("click", runAction);
   byId("run-custom-codex").addEventListener("click", runCustomCodex);
   byId("run-custom-shell").addEventListener("click", runCustomShell);
+  byId("freeagent-setup").addEventListener("click", setupFreeAgent);
+  byId("freeagent-start").addEventListener("click", startFreeAgent);
+  byId("freeagent-pull-model").addEventListener("click", pullFreeAgentModel);
   byId("cancel-job").addEventListener("click", cancelCurrentJob);
   byId("refresh-jobs").addEventListener("click", refreshJobs);
   byId("clear-job-filter").addEventListener("click", () => {
@@ -1833,6 +1958,11 @@ window.addEventListener("DOMContentLoaded", async () => {
       return;
     }
     byId("custom-codex-prompt").value = buildMigrationPrompt(meta);
+  });
+  byId("copy-final-output").addEventListener("click", () => {
+    copyFinalOutput().catch((error) => {
+      byId("raw-output").textContent = error instanceof Error ? error.message : String(error);
+    });
   });
   try {
     await bootstrap();

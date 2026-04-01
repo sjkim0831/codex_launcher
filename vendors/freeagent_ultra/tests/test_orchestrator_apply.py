@@ -13,3 +13,4 @@ def test_apply_and_rollback(tmp_path, monkeypatch):
     sess = SessionStore().load_session(res.session_id)
     orch.rollback_session(sess)
     assert "raise Exception" in p.read_text(encoding="utf-8")
+# agent note: updated by FreeAgent Ultra

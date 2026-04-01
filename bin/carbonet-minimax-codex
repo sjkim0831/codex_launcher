@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+MINIMAX_BIN="$SCRIPT_DIR/bin/carbonet-freeagent-minimax"
+
+usage() {
+  cat <<'EOF'
+Usage:
+  carbonet-minimax-codex exec [OPTIONS] [PROMPT]
+
+Supported options:
+  -C, --cd <DIR>
+  -o, --output-last-message <FILE>
+  --full-auto
+  --color <VALUE>
+  --sandbox <MODE>
+  --skip-git-repo-check
+  --json
+  -h, --help
+EOF
+}
+
+if [[ $# -eq 0 ]]; then
+  usage
+  exit 1
+fi
+
+subcommand="$1"
+shift
+
+if [[ "$subcommand" != "exec" ]]; then
+  echo "Unsupported subcommand: $subcommand" >&2
+  usage >&2
+  exit 2
+fi
+
+cwd=""
+output_file=""
+full_auto=0
+json_mode=0
+prompt_parts=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -C|--cd)
+      cwd="${2:-}"
+      shift 2
+      ;;
+    -o|--output-last-message)
+      output_file="${2:-}"
+      shift 2
+      ;;
+    --full-auto)
+      full_auto=1
+      shift
+      ;;
+    --json)
+      json_mode=1
+      shift
+      ;;
+    --color|--sandbox)
+      shift 2
+      ;;
+    --skip-git-repo-check)
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --)
+      shift
+      while [[ $# -gt 0 ]]; do
+        prompt_parts+=("$1")
+        shift
+      done
+      break
+      ;;
+    -*)
+      echo "Unsupported option: $1" >&2
+      exit 2
+      ;;
+    *)
+      prompt_parts+=("$1")
+      shift
+      ;;
+  esac
+done
+
+prompt="${prompt_parts[*]}"
+
+if [[ -z "$prompt" ]]; then
+  if [[ ! -t 0 ]]; then
+    prompt="$(cat)"
+  fi
+fi
+
+if [[ -z "$prompt" ]]; then
+  echo "Prompt is required." >&2
+  exit 2
+fi
+
+if [[ -n "$cwd" ]]; then
+  cd "$cwd"
+fi
+
+mode="prompt"
+args=()
+if [[ "$full_auto" -eq 1 ]]; then
+  mode="apply"
+  args+=(--yes)
+fi
+
+tmp_output="$(mktemp)"
+cleanup() {
+  rm -f "$tmp_output"
+}
+trap cleanup EXIT
+
+set +e
+"$MINIMAX_BIN" "$mode" "$prompt" "${args[@]}" >"$tmp_output" 2>&1
+status=$?
+set -e
+
+if [[ "$json_mode" -eq 1 ]]; then
+  printf '{"type":"thread.started","thread_id":"minimax-compat"}\n'
+  printf '{"type":"turn.started"}\n'
+  python3 - <<'PY' "$tmp_output"
+import json, pathlib, sys
+text = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8", errors="replace").strip()
+print(json.dumps({"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":text}}, ensure_ascii=False))
+PY
+  printf '{"type":"turn.completed"}\n'
+else
+  cat "$tmp_output"
+fi
+
+if [[ -n "$output_file" ]]; then
+  python3 - <<'PY' "$tmp_output" "$output_file"
+import pathlib, sys
+src = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8", errors="replace").strip()
+dst = pathlib.Path(sys.argv[2])
+dst.write_text(src, encoding="utf-8")
+PY
+fi
+
+exit "$status"

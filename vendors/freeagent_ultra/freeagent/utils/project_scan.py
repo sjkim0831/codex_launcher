@@ -27,6 +27,11 @@ IGNORED_DIR_NAMES = {
     "site-packages",
     "dist",
     "build",
+    "target",
+    "boot-inf",
+    "out",
+    "coverage",
+    "generated",
 }
 
 ACTION_WORDS = {
@@ -49,10 +54,41 @@ ACTION_WORDS = {
     "버그",
 }
 
+QUESTION_WORDS = {
+    "?",
+    "가능",
+    "가능해",
+    "가능함",
+    "되나",
+    "되나요",
+    "됨",
+    "사용 가능",
+    "사용가능",
+    "쓸 수 있",
+    "할 수 있",
+    "어떻게",
+    "무엇",
+    "뭐",
+    "what",
+    "how",
+    "can i",
+    "can we",
+    "is it",
+    "available",
+    "possible",
+    "works",
+    "work?",
+}
+
 
 def _is_ignored_path(path: str) -> bool:
     parts = [part.lower() for part in Path(path).parts]
-    return any(part in IGNORED_DIR_NAMES for part in parts)
+    normalized = str(Path(path)).replace("\\", "/").lower()
+    if any(part in IGNORED_DIR_NAMES for part in parts):
+        return True
+    if re.search(r"/static/react-app/assets/.+-[a-z0-9_-]{6,}\.(js|css)$", normalized):
+        return True
+    return False
 
 
 def _project_files(root: str = ".") -> list[str]:
@@ -163,9 +199,29 @@ def _goal_is_test_intent(goal: str) -> bool:
 
 
 def _goal_is_low_signal(goal: str, tokens: set[str]) -> bool:
-    # e.g. "되나?", "가능?" 같은 짧은 확인성 문장
+    # e.g. "되나?", "가능?", "이거 지금 사용 가능해?" 같은 확인성 문장
+    goal_l = goal.lower()
     compact = goal.strip().replace(" ", "")
+    short_confirmations = {
+        "됨?",
+        "되나?",
+        "가능?",
+        "돼?",
+        "되냐?",
+        "ok?",
+        "works?",
+        "possible?",
+    }
     if len(tokens) <= 1 and len(compact) <= 5:
+        return True
+    if compact.lower() in short_confirmations:
+        return True
+    if any(marker in goal_l for marker in QUESTION_WORDS) and not _goal_has_action_intent(goal, tokens):
+        if len(tokens) <= 4:
+            return True
+    if any(marker in goal_l for marker in QUESTION_WORDS) and not _goal_has_action_intent(goal, tokens) and len(compact) <= 8 and len(tokens) <= 2:
+        return True
+    if any(marker in goal_l for marker in ("?", "됨", "되나", "가능", "possible", "works", "work?")) and len(tokens) <= 2 and len(compact) <= 8:
         return True
     return False
 
@@ -285,10 +341,7 @@ def choose_files(goal: str, explicit_targets: list[str] | None = None, root: str
     tokens = _extract_goal_keywords(goal)
     files = _project_files(root)
     if _goal_is_low_signal(goal, tokens):
-        return sorted(
-            [FileCandidate(path=f, score=1.0, reasons=["low-signal-default"]) for f in files if f.lower().endswith("readme.md")],
-            key=lambda c: c.path,
-        )[:1]
+        return []
 
     candidates = [score_file(f, goal, stack) for f in files]
     filtered = [c for c in candidates if c.score > 0]

@@ -1,0 +1,18 @@
+app:
+  name: free-agent-scaffold
+  mode: local
+
+planner:
+  max_candidate_files: 8
+  default_verify_commands:
+    - pytest -q
+    - npm test -- --runInBand
+
+policy:
+  require_approval_for:
+    - git push
+    - rm -rf
+    - docker compose down
+
+reporting:
+  progress_updates: true

@@ -55,6 +55,12 @@ class ExplainResult:
     details: dict[str, Any] = field(default_factory=dict)
 
 @dataclass
+class AskResult:
+    answer: str
+    provider: str
+    details: dict[str, Any] = field(default_factory=dict)
+
+@dataclass
 class ProjectSummary:
     stack: str
     root_files: list[str]

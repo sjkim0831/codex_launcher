@@ -1,0 +1,30 @@
+{
+  "secondary button style": {
+    "variant": "secondary",
+    "class_name": "bg-gray-100"
+  },
+  "secondary 버튼 스타일": {
+    "variant": "secondary",
+    "class_name": "bg-gray-100"
+  },
+  "danger button style": {
+    "variant": "danger",
+    "class_name": "bg-red-600 text-white"
+  },
+  "danger 버튼 스타일": {
+    "variant": "danger",
+    "class_name": "bg-red-600 text-white"
+  },
+  "loading button behavior": {
+    "prop_bindings": [
+      ["disabled", "isLoading"],
+      ["aria-busy", "isLoading"]
+    ]
+  },
+  "loading 버튼 동작": {
+    "prop_bindings": [
+      ["disabled", "isLoading"],
+      ["aria-busy", "isLoading"]
+    ]
+  }
+}

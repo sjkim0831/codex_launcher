@@ -1,9 +1,21 @@
 from __future__ import annotations
 import subprocess
+import sys
 from freeagent.models import CommandResult
 from freeagent.safety import command_allowed
 
+
+def _normalize_command(command: str) -> str:
+    stripped = command.strip()
+    if stripped == "python":
+        return sys.executable
+    if stripped.startswith("python "):
+        return f"{sys.executable}{stripped[6:]}"
+    return command
+
+
 def run_shell(command: str, cwd: str = ".", timeout_sec: int = 180) -> CommandResult:
+    command = _normalize_command(command)
     allowed, reason = command_allowed(command)
     if not allowed:
         return CommandResult(ok=False, code=-1, stdout="", stderr=reason)

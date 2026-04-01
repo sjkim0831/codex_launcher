@@ -1,3 +1,5 @@
 runtime/
 __pycache__/
 *.pyc
+.env.freeagent
+vendors/freeagent_ultra/.env.freeagent

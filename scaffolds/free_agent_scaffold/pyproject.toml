@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "free-agent-scaffold"
+version = "0.1.0"
+description = "Scaffold for a safe code-editing agent"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+free-agent-scaffold = "free_agent.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["free_agent*"]

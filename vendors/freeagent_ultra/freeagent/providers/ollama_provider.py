@@ -9,6 +9,7 @@ class OllamaProvider(BaseProvider):
         self.host = host or os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")
         self.model = model or os.getenv("FREEAGENT_MODEL", "qwen2.5-coder:7b")
         self.timeout_sec = int(os.getenv("OLLAMA_TIMEOUT_SEC", "90"))
+        self.num_predict = int(os.getenv("OLLAMA_NUM_PREDICT", "256"))
 
     def available(self) -> bool:
         try:
@@ -18,9 +19,12 @@ class OllamaProvider(BaseProvider):
             return False
 
     def generate(self, prompt: str, **kwargs) -> str:
+        payload = {"model": self.model, "prompt": prompt, "stream": False}
+        if self.num_predict > 0:
+            payload["options"] = {"num_predict": self.num_predict}
         r = requests.post(
             f"{self.host}/api/generate",
-            json={"model": self.model, "prompt": prompt, "stream": False},
+            json=payload,
             timeout=(3, self.timeout_sec),
         )
         r.raise_for_status()
