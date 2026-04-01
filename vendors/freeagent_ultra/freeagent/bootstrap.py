@@ -5,11 +5,11 @@ import requests
 
 ENV_FILE = Path(os.environ.get("FREEAGENT_ENV_FILE", ".env.freeagent"))
 
-def ensure_env_file(model: str = "qwen2.5-coder:7b") -> None:
+def ensure_env_file(model: str = "qwen3.5:cloud") -> None:
     if ENV_FILE.exists():
         return
     ENV_FILE.write_text(
-        f"FREEAGENT_PROVIDER=ollama\nFREEAGENT_MODEL={model}\nOLLAMA_HOST=http://127.0.0.1:11434\nOLLAMA_TIMEOUT_SEC=90\nOLLAMA_NUM_PREDICT=256\nOPENAI_BASE_URL=\nOPENAI_API_KEY=\nFREEAGENT_MINIMAX_MODEL=minimax2.7\nMINIMAX_BASE_URL=https://api.minimaxi.chat/v1\nMINIMAX_API_KEY=\n",
+        f"FREEAGENT_PROVIDER=ollama\nFREEAGENT_MODEL={model}\nOLLAMA_HOST=http://127.0.0.1:11434\nOLLAMA_TIMEOUT_SEC=90\nOLLAMA_NUM_PREDICT=64\nOPENAI_BASE_URL=\nOPENAI_API_KEY=\nFREEAGENT_MINIMAX_MODEL=minimax2.7\nMINIMAX_BASE_URL=https://api.minimaxi.chat/v1\nMINIMAX_API_KEY=\n",
         encoding="utf-8",
     )
 
@@ -64,7 +64,7 @@ def ensure_model(model: str, host: str = "http://127.0.0.1:11434") -> bool:
     except Exception:
         return False
 
-def bootstrap_all(model: str = "qwen2.5-coder:7b", yes: bool = False) -> dict:
+def bootstrap_all(model: str = "qwen3.5:cloud", yes: bool = False) -> dict:
     ensure_env_file(model)
     load_env_file()
     status = {"env": True, "ollama_installed": shutil.which("ollama") is not None}

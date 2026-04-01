@@ -21,55 +21,13 @@ def parse_targets(targets: str | None) -> list[str] | None:
     return [x.strip() for x in targets.split(",") if x.strip()]
 
 
-def build_prompt_payload(goal: str, targets: list[str] | None = None) -> dict:
-    orch = Orchestrator(SessionStore())
-    plan = orch.make_plan(goal, targets)
-    selected_targets = targets or plan.target_files
-    low_signal = not selected_targets and not plan.candidate_files
-    instructions = [
-        "Apply only the files that are directly relevant to the goal.",
-        "Avoid generated, bundled, compiled, or deployment output files.",
-        "Keep the patch minimal and explain assumptions before risky changes.",
-    ]
-    if low_signal:
-        instructions.insert(0, "The request is too short or ambiguous to map to files safely. Clarify the desired change first.")
-    prompt_lines = [
-        f"Goal: {goal}",
-        f"Stack: {plan.stack}",
-        f"Risk: {plan.risk}",
-        "Targets:",
-        *([f"- {path}" for path in selected_targets] or ["- none"]),
-        "Candidates:",
-        *(
-            [
-                f"- {c.path} score={c.score} reasons={','.join(c.reasons)}"
-                for c in plan.candidate_files[:6]
-            ]
-            or ["- none"]
-        ),
-        "Verify:",
-        *([f"- {item}" for item in plan.verify_plan] or ["- none"]),
-        "Constraints:",
-        *[f"- {item}" for item in instructions],
-    ]
-    return {
-        "goal": goal,
-        "stack": plan.stack,
-        "risk": plan.risk,
-        "targets": selected_targets,
-        "candidate_files": [{"path": c.path, "score": c.score, "reasons": c.reasons} for c in plan.candidate_files[:6]],
-        "verify": plan.verify_plan,
-        "instructions": instructions,
-        "prompt": "\n".join(prompt_lines),
-    }
-
 @app.callback()
 def _load_env():
     ensure_env_file()
     load_env_file()
 
 @app.command()
-def bootstrap(yes: bool = typer.Option(False, "--yes"), model: str = typer.Option("qwen2.5-coder:7b", "--model")):
+def bootstrap(yes: bool = typer.Option(False, "--yes"), model: str = typer.Option("qwen3.5:cloud", "--model")):
     status = bootstrap_all(model=model, yes=yes)
     console.print(Panel(json.dumps(status, ensure_ascii=False, indent=2), title="BOOTSTRAP"))
 
@@ -103,8 +61,21 @@ def plan(goal: str, targets: str | None = typer.Option(None, "--targets")):
 
 @app.command()
 def prompt(goal: str, targets: str | None = typer.Option(None, "--targets")):
-    payload = build_prompt_payload(goal, parse_targets(targets))
-    console.print(Panel(json.dumps(payload, ensure_ascii=False, indent=2), title="PROMPT"))
+    res = Orchestrator(SessionStore()).prompt(goal, parse_targets(targets))
+    console.print(
+        Panel(
+            json.dumps(
+                {
+                    "answer": res.answer,
+                    "provider": res.provider,
+                    "details": res.details,
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            title="PROMPT",
+        )
+    )
 
 
 @app.command()

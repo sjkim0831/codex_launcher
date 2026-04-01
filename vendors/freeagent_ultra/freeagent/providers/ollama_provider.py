@@ -7,7 +7,7 @@ class OllamaProvider(BaseProvider):
 
     def __init__(self, host: str | None = None, model: str | None = None) -> None:
         self.host = host or os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")
-        self.model = model or os.getenv("FREEAGENT_MODEL", "qwen2.5-coder:7b")
+        self.model = model or os.getenv("FREEAGENT_MODEL", "qwen3.5:cloud")
         self.timeout_sec = int(os.getenv("OLLAMA_TIMEOUT_SEC", "90"))
         self.num_predict = int(os.getenv("OLLAMA_NUM_PREDICT", "256"))
 

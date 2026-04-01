@@ -11,6 +11,7 @@ freeagent/provider_manager.py
 freeagent/safety.py
 freeagent/session.py
 freeagent/providers/base.py
+freeagent/providers/minimax_provider.py
 freeagent/providers/mock_provider.py
 freeagent/providers/ollama_provider.py
 freeagent/providers/openai_compatible.py
@@ -27,6 +28,8 @@ freeagent_ultra.egg-info/dependency_links.txt
 freeagent_ultra.egg-info/entry_points.txt
 freeagent_ultra.egg-info/requires.txt
 freeagent_ultra.egg-info/top_level.txt
+tests/test_ask.py
+tests/test_cli_prompt.py
 tests/test_doctor.py
 tests/test_explain.py
 tests/test_inspect_tools.py

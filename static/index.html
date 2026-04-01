@@ -15,14 +15,21 @@
           <p class="muted">workspace, quick action, free prompt를 한 곳에서 실행</p>
         </div>
 
-        <section class="panel">
+        <div class="tab-bar sidebar-tab-bar" role="tablist" aria-label="Sidebar Sections">
+          <button class="tab-button" data-sidebar-tab="workspace" type="button">Workspace</button>
+          <button class="tab-button" data-sidebar-tab="sessions" type="button">Sessions</button>
+          <button class="tab-button" data-sidebar-tab="accounts" type="button">Accounts</button>
+          <button class="tab-button" data-sidebar-tab="jobs" type="button">Jobs</button>
+        </div>
+
+        <section class="panel" data-sidebar-tab-panel="workspace">
           <div class="panel-head">
             <h2>Workspace</h2>
           </div>
           <div id="workspace-list" class="workspace-list"></div>
         </section>
 
-        <section class="panel">
+        <section class="panel" data-sidebar-tab-panel="sessions">
           <div class="panel-head">
             <h2>Sessions</h2>
             <button id="refresh-sessions" class="ghost-button" type="button">Refresh</button>
@@ -78,10 +85,17 @@
           </div>
           <div id="session-compare-view" class="session-compare-view"></div>
           <pre id="session-summary" class="console-output">세션 요약이 여기에 표시됩니다.</pre>
+          <div id="session-pagination" class="list-pagination is-collapsed">
+            <span id="session-pagination-text" class="muted"></span>
+            <div class="pagination-actions">
+              <button id="session-page-prev" class="ghost-button" type="button">Prev</button>
+              <button id="session-page-next" class="ghost-button" type="button">Next</button>
+            </div>
+          </div>
           <div id="session-list" class="workspace-list"></div>
         </section>
 
-        <section class="panel">
+        <section class="panel" data-sidebar-tab-panel="accounts">
           <div class="panel-head">
             <h2>Accounts</h2>
             <button id="refresh-accounts" class="ghost-button" type="button">Refresh</button>
@@ -100,7 +114,7 @@
           <div id="account-list" class="workspace-list"></div>
         </section>
 
-        <section class="panel">
+        <section class="panel" data-sidebar-tab-panel="jobs">
           <div class="panel-head">
             <h2>Jobs</h2>
             <button id="refresh-jobs" class="ghost-button" type="button">Refresh</button>
@@ -108,6 +122,13 @@
           <div id="job-filter-bar" class="job-filter-bar is-collapsed">
             <span id="job-filter-text" class="muted"></span>
             <button id="clear-job-filter" class="ghost-button" type="button">Clear</button>
+          </div>
+          <div id="job-pagination" class="list-pagination is-collapsed">
+            <span id="job-pagination-text" class="muted"></span>
+            <div class="pagination-actions">
+              <button id="job-page-prev" class="ghost-button" type="button">Prev</button>
+              <button id="job-page-next" class="ghost-button" type="button">Next</button>
+            </div>
           </div>
           <div id="job-list" class="job-list"></div>
         </section>
@@ -149,7 +170,15 @@
           <p id="freeagent-status-note" class="muted inline-note">FreeAgent 상태 확인 중. sudo 비밀번호는 설치 요청 1회에만 사용되고 저장하지 않습니다.</p>
         </section>
 
-        <section class="panel browser-panel">
+        <div class="tab-bar main-tab-bar" role="tablist" aria-label="Main Sections">
+          <button class="tab-button" data-main-tab="browser" type="button">Browser</button>
+          <button class="tab-button" data-main-tab="reference" type="button">Reference</button>
+          <button class="tab-button" data-main-tab="project" type="button">Project</button>
+          <button class="tab-button" data-main-tab="compose" type="button">Compose</button>
+          <button class="tab-button" data-main-tab="output" type="button">Output</button>
+        </div>
+
+        <section class="panel browser-panel" data-main-tab-panel="browser">
           <div class="panel-head">
             <h2>Real Browser</h2>
             <span id="browser-status" class="muted">확장 대기 중</span>
@@ -176,7 +205,7 @@
           </div>
         </section>
 
-        <section class="reference-grid">
+        <section class="reference-grid" data-main-tab-panel="reference">
           <div class="panel reference-panel">
             <div class="panel-head">
               <h2>Theme Reference</h2>
@@ -220,8 +249,8 @@
               <h2>Reference Preview</h2>
               <span id="reference-selected" class="muted">선택된 파일 없음</span>
             </div>
-            <div class="button-row">
-              <button id="insert-reference-context" class="secondary-button" type="button">프롬프트에 추가</button>
+            <div class="button-row button-row-uniform">
+              <button id="insert-reference-context" class="secondary-button" type="button">프롬프트 추가</button>
               <button id="compose-reference-migration" class="primary-button" type="button">마이그레이션 프롬프트 생성</button>
             </div>
             <div id="reference-preview-meta" class="muted inline-note">`code.html` 또는 `screen.png`를 선택하세요.</div>
@@ -231,7 +260,7 @@
           </div>
         </section>
 
-        <section class="project-grid">
+        <section class="project-grid" data-main-tab-panel="project">
           <div class="panel project-panel">
             <div class="panel-head">
               <h2>Project Folder</h2>
@@ -275,16 +304,24 @@
               <button id="project-package-backend" class="secondary-button" type="button">Backend Package</button>
               <button id="project-restart-18000" class="ghost-button" type="button">Restart 18000</button>
             </div>
+            <div class="project-action-grid project-action-grid-secondary">
+              <button id="project-backup-sql" class="secondary-button" type="button">SQL Backup</button>
+              <button id="project-backup-physical" class="secondary-button" type="button">Physical Backup</button>
+              <button id="project-backup-status" class="ghost-button" type="button">Backup Status</button>
+            </div>
+            <div class="project-action-help muted">
+              백업은 `/opt/util/cubrid/11.2/scripts` 기준 스크립트를 실행합니다. 프로젝트를 선택한 뒤 버튼으로 바로 실행하고 결과는 Jobs와 Raw Output에서 확인합니다.
+            </div>
           </div>
         </section>
 
-        <section class="reference-grid">
+        <section class="reference-grid" data-main-tab-panel="project">
           <div class="panel project-panel">
             <div class="panel-head">
               <h2>Project Menus</h2>
               <span id="project-menu-source" class="muted">메뉴 스캔 전</span>
             </div>
-            <div class="button-row">
+            <div class="button-row button-row-uniform">
               <button id="project-scan-menus" class="secondary-button" type="button">Scan Menus</button>
               <button id="project-use-menu-context" class="ghost-button" type="button">프롬프트에 메뉴 추가</button>
             </div>
@@ -307,7 +344,7 @@
           </div>
         </section>
 
-        <section class="quick-grid">
+        <section class="quick-grid" data-main-tab-panel="compose">
           <div class="panel action-panel">
             <div class="panel-head">
               <h2>Quick Actions</h2>
@@ -363,7 +400,7 @@
               <textarea id="extra-input" placeholder="선택한 quick action에 덧붙일 추가 입력"></textarea>
             </div>
 
-            <div class="button-row">
+            <div class="button-row button-row-uniform">
               <button id="run-selected-action" class="primary-button" type="button">Run Selected Action</button>
               <button id="run-custom-codex" class="secondary-button" type="button">Run AI Prompt</button>
               <button id="run-custom-shell" class="secondary-button" type="button">Run Custom Shell</button>
@@ -374,11 +411,14 @@
           </div>
         </section>
 
-        <section class="console-grid">
+        <section class="console-grid" data-main-tab-panel="output">
           <div class="panel output-panel">
             <div class="panel-head">
               <h2>Command</h2>
-              <span id="job-meta" class="muted">실행 전</span>
+              <div class="panel-head-actions">
+                <span id="job-meta" class="muted">실행 전</span>
+                <button id="copy-command-preview" class="ghost-button" type="button">Copy</button>
+              </div>
             </div>
             <div id="job-plan-step" class="muted inline-note">Plan step 없음</div>
             <pre id="command-preview" class="command-preview">아직 실행된 작업이 없습니다.</pre>
@@ -395,6 +435,7 @@
           <div class="panel output-panel wide">
             <div class="panel-head">
               <h2>Raw Output</h2>
+              <button id="copy-raw-output" class="ghost-button" type="button">Copy</button>
             </div>
             <pre id="raw-output" class="console-output">실행 로그가 여기에 표시됩니다.</pre>
           </div>

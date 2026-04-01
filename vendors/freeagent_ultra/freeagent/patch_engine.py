@@ -18,6 +18,9 @@ def patch_python_auth_status(path: str, text: str) -> str:
 
 def patch_express_auth_status(path: str, text: str) -> str:
     text = text.replace("res.status(500)", "res.status(401)")
+    text = text.replace("status: 500", "status: 401")
+    text = text.replace("status : 500", "status : 401")
+    text = text.replace("status=500", "status=401")
     return text
 
 def patch_react_button_fetch_toast(path: str, text: str) -> str:

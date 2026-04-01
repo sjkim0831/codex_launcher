@@ -48,6 +48,7 @@ select {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  min-width: 0;
 }
 
 .main {
@@ -55,6 +56,7 @@ select {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  min-width: 0;
 }
 
 .brand h1,
@@ -87,6 +89,8 @@ select {
 
 .panel {
   padding: 18px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .hero {
@@ -114,6 +118,60 @@ select {
   font-size: 13px;
 }
 
+.tab-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tab-button {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 250, 244, 0.88);
+  color: var(--muted);
+  padding: 10px 14px;
+  min-height: 40px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.tab-button:hover {
+  border-color: var(--accent);
+  color: var(--text);
+  background: #fff3e8;
+}
+
+.tab-button.active {
+  border-color: var(--accent);
+  color: #fff;
+  background: var(--accent);
+  box-shadow: 0 8px 20px rgba(159, 59, 34, 0.18);
+}
+
+.sidebar-tab-bar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 252, 245, 0.92);
+  backdrop-filter: blur(10px);
+}
+
+.main-tab-bar {
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: rgba(255, 253, 248, 0.94);
+  box-shadow: var(--shadow);
+}
+
+[data-sidebar-tab-panel],
+[data-main-tab-panel] {
+  min-width: 0;
+}
+
 .status-bar {
   display: flex;
   flex-wrap: wrap;
@@ -137,6 +195,24 @@ select {
 .action-grid {
   display: grid;
   gap: 10px;
+  min-width: 0;
+}
+
+.list-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fffaf4;
+}
+
+.pagination-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .job-filter-bar {
@@ -358,6 +434,25 @@ select {
   background: #fff;
   cursor: pointer;
   transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.workspace-card,
+.job-card {
+  display: grid;
+  gap: 6px;
+  text-align: left;
+}
+
+.workspace-card strong,
+.job-card strong,
+.workspace-card .muted,
+.job-card .muted,
+.pill {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .workspace-card:hover,
@@ -508,6 +603,7 @@ select {
 
 .project-action-grid button {
   width: 100%;
+  min-height: 44px;
 }
 
 .project-one-click {
@@ -515,6 +611,14 @@ select {
   padding-top: 13px;
   padding-bottom: 13px;
   font-weight: 700;
+}
+
+.project-action-grid-secondary {
+  margin-top: -2px;
+}
+
+.project-action-help {
+  line-height: 1.5;
 }
 
 .project-search-chip {
@@ -641,6 +745,17 @@ textarea {
   gap: 10px;
 }
 
+.button-row-uniform > button {
+  min-height: 42px;
+  padding: 10px 14px;
+}
+
+.button-row-uniform > .primary-button,
+.button-row-uniform > .secondary-button,
+.button-row-uniform > .ghost-button {
+  flex: 1 1 180px;
+}
+
 .primary-button,
 .secondary-button,
 .ghost-button {
@@ -668,6 +783,13 @@ textarea {
   background: transparent;
   border-color: var(--border);
   color: var(--text);
+}
+
+.panel-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
 }
 
 code {
@@ -698,6 +820,16 @@ code {
   .project-action-grid {
     grid-template-columns: 1fr;
   }
+
+  .button-row-uniform > .primary-button,
+  .button-row-uniform > .secondary-button,
+  .button-row-uniform > .ghost-button {
+    flex-basis: 100%;
+  }
+
+  .tab-bar {
+    flex-direction: column;
+  }
 }
 
 .account-card-meta {
@@ -705,6 +837,7 @@ code {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 8px;
+  min-width: 0;
 }
 
 #login-help {
@@ -730,6 +863,15 @@ code {
   font-size: 12px;
   line-height: 1.6;
   white-space: pre-wrap;
+  word-break: break-word;
+}
+
+#current-session,
+#job-meta,
+#job-plan-step,
+#browser-current-url,
+#freeagent-status-note {
+  overflow-wrap: anywhere;
   word-break: break-word;
 }
 

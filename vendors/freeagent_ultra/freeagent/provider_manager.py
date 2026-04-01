@@ -32,7 +32,12 @@ class ProviderManager:
     def generate(self, prompt: str) -> tuple[str, str]:
         errors: list[str] = []
         for p in self.providers:
-            if not p.available():
+            is_available = False
+            try:
+                is_available = p.available()
+            except Exception as e:
+                errors.append(f"{p.name}: availability check failed: {e}")
+            if not is_available and p.name != self.preferred:
                 errors.append(f"{p.name}: unavailable")
                 continue
             try:

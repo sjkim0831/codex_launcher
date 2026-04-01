@@ -1,5 +1,6 @@
 from pathlib import Path
 from freeagent.orchestrator import Orchestrator
+from freeagent.patch_engine import patch_file
 from freeagent.session import SessionStore
 
 def test_apply_and_rollback(tmp_path, monkeypatch):
@@ -13,4 +14,10 @@ def test_apply_and_rollback(tmp_path, monkeypatch):
     sess = SessionStore().load_session(res.session_id)
     orch.rollback_session(sess)
     assert "raise Exception" in p.read_text(encoding="utf-8")
+
+
+def test_patch_typescript_auth_status_object():
+    before = "export async function loginUser() {\n  return { status: 500, message: 'bad' };\n}\n"
+    after = patch_file("src/framework/api/auth.ts", before, "change login failure status from 500 to 401")
+    assert "status: 401" in after
 # agent note: updated by FreeAgent Ultra

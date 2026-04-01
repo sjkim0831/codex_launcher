@@ -865,7 +865,7 @@ class LauncherApp:
     def freeagent_python(self) -> Path:
         return self.freeagent_venv_dir() / "bin" / "python"
 
-    def freeagent_write_env(self, model: str = "qwen2.5-coder:7b") -> None:
+    def freeagent_write_env(self, model: str = "qwen3.5:cloud") -> None:
         self.freeagent_home().mkdir(parents=True, exist_ok=True)
         current = read_key_values(self.freeagent_env_file())
         if not current and self.freeagent_legacy_env_file().exists():
@@ -875,7 +875,7 @@ class LauncherApp:
             "FREEAGENT_MODEL": current.get("FREEAGENT_MODEL", model),
             "OLLAMA_HOST": current.get("OLLAMA_HOST", "http://127.0.0.1:11434"),
             "OLLAMA_TIMEOUT_SEC": current.get("OLLAMA_TIMEOUT_SEC", "90"),
-            "OLLAMA_NUM_PREDICT": current.get("OLLAMA_NUM_PREDICT", "256"),
+            "OLLAMA_NUM_PREDICT": current.get("OLLAMA_NUM_PREDICT", "64"),
             "OPENAI_BASE_URL": current.get("OPENAI_BASE_URL", ""),
             "OPENAI_API_KEY": current.get("OPENAI_API_KEY", ""),
             "FREEAGENT_MINIMAX_MODEL": current.get("FREEAGENT_MINIMAX_MODEL", "minimax2.7"),
@@ -928,7 +928,7 @@ class LauncherApp:
         except Exception:
             return {"models": []}
 
-    def freeagent_setup_runtime(self, model: str = "qwen2.5-coder:7b", sudo_password: str = "") -> list[str]:
+    def freeagent_setup_runtime(self, model: str = "qwen3.5:cloud", sudo_password: str = "") -> list[str]:
         messages: list[str] = []
         home = self.freeagent_home()
         if not (home / "freeagent").exists():
@@ -973,7 +973,7 @@ class LauncherApp:
         if provider == "minimax2.7":
             provider = "minimax"
         host = env_doc.get("OLLAMA_HOST", "http://127.0.0.1:11434")
-        ollama_model = env_doc.get("FREEAGENT_MODEL", "qwen2.5-coder:7b")
+        ollama_model = env_doc.get("FREEAGENT_MODEL", "qwen3.5:cloud")
         minimax_model = env_doc.get("FREEAGENT_MINIMAX_MODEL", "minimax2.7")
         ollama_running = self.ollama_running(host)
         tags = self.ollama_tags(host) if ollama_running else {"models": []}
@@ -2153,7 +2153,7 @@ class LauncherApp:
                 job.process.terminate()
         return self.get_job(job_id)
 
-    def setup_freeagent(self, model: str = "qwen2.5-coder:7b", sudo_password: str = "") -> dict[str, Any]:
+    def setup_freeagent(self, model: str = "qwen3.5:cloud", sudo_password: str = "") -> dict[str, Any]:
         messages = self.freeagent_setup_runtime(model=model, sudo_password=sudo_password)
         return {
             "ok": True,
@@ -2173,7 +2173,7 @@ class LauncherApp:
         return status
 
     def pull_freeagent_model(self, payload: dict[str, Any]) -> dict[str, Any]:
-        model = safe_text(payload.get("model")).strip() or self.freeagent_config().get("model", "qwen2.5-coder:7b")
+        model = safe_text(payload.get("model")).strip() or self.freeagent_config().get("model", "qwen3.5:cloud")
         if self.freeagent_provider() != "ollama":
             raise ValueError("Model pull is only available for Ollama-backed FreeAgent.")
         workspace = self.resolve_workspace(payload)
@@ -2794,7 +2794,7 @@ class LauncherHandler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/api/freeagent/setup":
             try:
-                model = safe_text(payload.get("model")).strip() or "qwen2.5-coder:7b"
+                model = safe_text(payload.get("model")).strip() or "qwen3.5:cloud"
                 sudo_password = safe_text(payload.get("sudoPassword"))
                 self.write_json(HTTPStatus.OK, self.app.setup_freeagent(model, sudo_password=sudo_password))
             except (ValueError, subprocess.CalledProcessError) as exc:

@@ -15,6 +15,12 @@ const state = {
   },
   selectedCli: "codex",
   selectedFreeAgentMode: "prompt",
+  selectedSidebarTab: "workspace",
+  selectedMainTab: "compose",
+  sessionPage: 1,
+  jobPage: 1,
+  sessionPageSize: 6,
+  jobPageSize: 8,
   sessions: [],
   currentSession: null,
   referenceRoots: [],
@@ -81,6 +87,22 @@ async function copyFinalOutput() {
   }
 }
 
+async function copyPanelText(elementId, buttonId) {
+  const button = byId(buttonId);
+  const originalLabel = button.textContent;
+  try {
+    await copyTextToClipboard(byId(elementId).textContent);
+    button.textContent = "Copied";
+  } catch (error) {
+    button.textContent = "Copy Failed";
+    alert(error instanceof Error ? error.message : String(error));
+  } finally {
+    window.setTimeout(() => {
+      button.textContent = originalLabel;
+    }, 1200);
+  }
+}
+
 function loadUiState() {
   try {
     const raw = window.localStorage.getItem(UI_STATE_KEY);
@@ -98,6 +120,12 @@ function loadUiState() {
       if (doc.selectedPlanStepBySession && typeof doc.selectedPlanStepBySession === "object") {
         state.selectedPlanStepBySession = doc.selectedPlanStepBySession;
       }
+      if (typeof doc.selectedSidebarTab === "string" && doc.selectedSidebarTab) {
+        state.selectedSidebarTab = doc.selectedSidebarTab;
+      }
+      if (typeof doc.selectedMainTab === "string" && doc.selectedMainTab) {
+        state.selectedMainTab = doc.selectedMainTab;
+      }
     }
   } catch (_error) {
     // Ignore invalid local UI state.
@@ -108,11 +136,37 @@ function persistUiState() {
   try {
     window.localStorage.setItem(UI_STATE_KEY, JSON.stringify({
       sessionPanelOpen: state.sessionPanelOpen,
-      selectedPlanStepBySession: state.selectedPlanStepBySession || {}
+      selectedPlanStepBySession: state.selectedPlanStepBySession || {},
+      selectedSidebarTab: state.selectedSidebarTab,
+      selectedMainTab: state.selectedMainTab
     }));
   } catch (_error) {
     // Ignore localStorage failures.
   }
+}
+
+function syncTabs() {
+  const sidebarTab = state.selectedSidebarTab || "workspace";
+  const mainTab = state.selectedMainTab || "compose";
+  document.querySelectorAll("[data-sidebar-tab]").forEach((element) => {
+    const active = (element.getAttribute("data-sidebar-tab") || "") === sidebarTab;
+    element.classList.toggle("active", active);
+    element.setAttribute("aria-selected", active ? "true" : "false");
+  });
+  document.querySelectorAll("[data-sidebar-tab-panel]").forEach((element) => {
+    const active = (element.getAttribute("data-sidebar-tab-panel") || "") === sidebarTab;
+    element.classList.toggle("is-collapsed", !active);
+  });
+  document.querySelectorAll("[data-main-tab]").forEach((element) => {
+    const active = (element.getAttribute("data-main-tab") || "") === mainTab;
+    element.classList.toggle("active", active);
+    element.setAttribute("aria-selected", active ? "true" : "false");
+  });
+  document.querySelectorAll("[data-main-tab-panel]").forEach((element) => {
+    const active = (element.getAttribute("data-main-tab-panel") || "") === mainTab;
+    element.classList.toggle("is-collapsed", !active);
+  });
+  persistUiState();
 }
 
 function syncSessionPanelToggles() {
@@ -252,11 +306,22 @@ function renderSessions(sessions, currentSession) {
   });
   syncSessionPanelToggles();
   const target = byId("session-list");
+  const pagination = byId("session-pagination");
+  const paginationText = byId("session-pagination-text");
   if (!state.sessions.length) {
+    pagination.classList.add("is-collapsed");
     target.innerHTML = `<div class="muted">세션이 없습니다.</div>`;
     return;
   }
-  target.innerHTML = state.sessions.map((session) => `
+  const totalPages = Math.max(1, Math.ceil(state.sessions.length / state.sessionPageSize));
+  state.sessionPage = Math.min(Math.max(1, state.sessionPage), totalPages);
+  const start = (state.sessionPage - 1) * state.sessionPageSize;
+  const pageItems = state.sessions.slice(start, start + state.sessionPageSize);
+  pagination.classList.toggle("is-collapsed", totalPages <= 1);
+  paginationText.textContent = `Sessions ${start + 1}-${Math.min(start + pageItems.length, state.sessions.length)} / ${state.sessions.length}`;
+  byId("session-page-prev").disabled = state.sessionPage <= 1;
+  byId("session-page-next").disabled = state.sessionPage >= totalPages;
+  target.innerHTML = pageItems.map((session) => `
     <button class="workspace-card ${session.id === state.selectedSessionId ? "active" : ""}" data-session-id="${session.id}" type="button">
       <strong>${escapeHtml(session.title || session.id)}</strong>
       <div class="muted">${escapeHtml(session.summary || "아직 요약 없음")}</div>
@@ -1327,16 +1392,27 @@ function renderJobs(jobs) {
   const target = byId("job-list");
   const filterBar = byId("job-filter-bar");
   const filterText = byId("job-filter-text");
+  const pagination = byId("job-pagination");
+  const paginationText = byId("job-pagination-text");
   const items = state.selectedPlanStep
     ? jobs.filter((job) => (job.planStep || "") === state.selectedPlanStep)
     : jobs;
   filterBar.classList.toggle("is-collapsed", !state.selectedPlanStep);
   filterText.textContent = state.selectedPlanStep ? `Filtered by step: ${state.selectedPlanStep}` : "";
   if (!items.length) {
+    pagination.classList.add("is-collapsed");
     target.innerHTML = `<div class="muted">${escapeHtml(state.selectedPlanStep ? `선택한 step(${state.selectedPlanStep})에 해당하는 실행 이력이 없습니다.` : "아직 실행 이력이 없습니다.")}</div>`;
     return;
   }
-  target.innerHTML = items.map((job) => `
+  const totalPages = Math.max(1, Math.ceil(items.length / state.jobPageSize));
+  state.jobPage = Math.min(Math.max(1, state.jobPage), totalPages);
+  const start = (state.jobPage - 1) * state.jobPageSize;
+  const pageItems = items.slice(start, start + state.jobPageSize);
+  pagination.classList.toggle("is-collapsed", totalPages <= 1);
+  paginationText.textContent = `Jobs ${start + 1}-${Math.min(start + pageItems.length, items.length)} / ${items.length}`;
+  byId("job-page-prev").disabled = state.jobPage <= 1;
+  byId("job-page-next").disabled = state.jobPage >= totalPages;
+  target.innerHTML = pageItems.map((job) => `
     <button class="job-card ${job.jobId === state.selectedJobId ? "active" : ""}" data-job-id="${job.jobId}" type="button">
       <strong>${escapeHtml(job.title)}</strong>
       <div class="muted">${escapeHtml(job.workspaceLabel || "")}</div>
@@ -1502,7 +1578,7 @@ async function runCustomShell() {
 }
 
 async function setupFreeAgent() {
-  const model = prompt("설치할 FreeAgent 기본 모델", state.bootstrap?.freeagent?.model || "qwen2.5-coder:7b");
+  const model = prompt("설치할 FreeAgent 기본 모델", state.bootstrap?.freeagent?.model || "qwen3.5:cloud");
   if (!model) {
     return;
   }
@@ -1534,7 +1610,7 @@ async function pullFreeAgentModel() {
     alert("현재 provider는 Ollama가 아니라서 model pull이 필요 없습니다.");
     return;
   }
-  const model = prompt("다운로드할 Ollama 모델", state.bootstrap?.freeagent?.model || "qwen2.5-coder:7b");
+  const model = prompt("다운로드할 Ollama 모델", state.bootstrap?.freeagent?.model || "qwen3.5:cloud");
   if (!model) {
     return;
   }
@@ -1603,6 +1679,30 @@ async function restartSelectedProject18000() {
   }
   const command = `[ -x ops/scripts/restart-18000.sh ] && ops/scripts/restart-18000.sh`;
   await runProjectShell(projectPath, command, "Restart 18000");
+}
+
+async function backupSelectedProjectSql() {
+  const projectPath = requireProjectPath();
+  if (!projectPath) {
+    return;
+  }
+  await runProjectShell(projectPath, "/opt/util/cubrid/11.2/scripts/backup_sql.sh", "SQL Backup");
+}
+
+async function backupSelectedProjectPhysical() {
+  const projectPath = requireProjectPath();
+  if (!projectPath) {
+    return;
+  }
+  await runProjectShell(projectPath, "/opt/util/cubrid/11.2/scripts/backup_physical.sh", "Physical Backup");
+}
+
+async function checkSelectedProjectBackupStatus() {
+  const projectPath = requireProjectPath();
+  if (!projectPath) {
+    return;
+  }
+  await runProjectShell(projectPath, "/opt/util/cubrid/11.2/scripts/check_backup_status.sh", "Backup Status");
 }
 
 async function oneClickBuildAndRestart() {
@@ -1715,6 +1815,7 @@ async function createSession() {
     })
   });
   byId("session-title").value = "";
+  state.sessionPage = 1;
   renderSessions(payload.items || [], payload.session || null);
   await refreshJobs();
 }
@@ -1730,6 +1831,7 @@ async function branchSession() {
     body: JSON.stringify({ title })
   });
   byId("session-title").value = "";
+  state.sessionPage = 1;
   renderSessions(payload.items || [], payload.session || null);
   await refreshJobs();
 }
@@ -1772,6 +1874,7 @@ async function bootstrap() {
   renderSessions(state.sessions, state.currentSession);
   renderActions();
   renderCliOptions();
+  syncTabs();
   syncWorkspaceCaption();
   renderAccounts(state.bootstrap.accounts || [], state.bootstrap.currentAccountId || "");
   syncBrowserStatus(state.bootstrap.browser || {});
@@ -1788,6 +1891,19 @@ async function bootstrap() {
 
 window.addEventListener("DOMContentLoaded", async () => {
   loadUiState();
+  syncTabs();
+  document.querySelectorAll("[data-sidebar-tab]").forEach((element) => {
+    element.addEventListener("click", () => {
+      state.selectedSidebarTab = element.getAttribute("data-sidebar-tab") || "workspace";
+      syncTabs();
+    });
+  });
+  document.querySelectorAll("[data-main-tab]").forEach((element) => {
+    element.addEventListener("click", () => {
+      state.selectedMainTab = element.getAttribute("data-main-tab") || "compose";
+      syncTabs();
+    });
+  });
   byId("run-selected-action").addEventListener("click", runAction);
   byId("run-custom-codex").addEventListener("click", runCustomCodex);
   byId("run-custom-shell").addEventListener("click", runCustomShell);
@@ -1800,6 +1916,22 @@ window.addEventListener("DOMContentLoaded", async () => {
     focusPlanStep("").catch((error) => {
       byId("raw-output").textContent = error instanceof Error ? error.message : String(error);
     });
+  });
+  byId("job-page-prev").addEventListener("click", async () => {
+    state.jobPage = Math.max(1, state.jobPage - 1);
+    await refreshJobs();
+  });
+  byId("job-page-next").addEventListener("click", async () => {
+    state.jobPage += 1;
+    await refreshJobs();
+  });
+  byId("session-page-prev").addEventListener("click", async () => {
+    state.sessionPage = Math.max(1, state.sessionPage - 1);
+    await refreshSessions();
+  });
+  byId("session-page-next").addEventListener("click", async () => {
+    state.sessionPage += 1;
+    await refreshSessions();
   });
   byId("toggle-session-plan").addEventListener("click", () => {
     state.sessionPanelOpen.plan = !state.sessionPanelOpen.plan;
@@ -1823,6 +1955,13 @@ window.addEventListener("DOMContentLoaded", async () => {
   byId("refresh-accounts").addEventListener("click", refreshAccounts);
   byId("create-session").addEventListener("click", createSession);
   byId("branch-session").addEventListener("click", branchSession);
+  byId("project-build-frontend").addEventListener("click", buildSelectedProjectFrontend);
+  byId("project-package-backend").addEventListener("click", packageSelectedProjectBackend);
+  byId("project-restart-18000").addEventListener("click", restartSelectedProject18000);
+  byId("project-one-click").addEventListener("click", oneClickBuildAndRestart);
+  byId("project-backup-sql").addEventListener("click", backupSelectedProjectSql);
+  byId("project-backup-physical").addEventListener("click", backupSelectedProjectPhysical);
+  byId("project-backup-status").addEventListener("click", checkSelectedProjectBackupStatus);
   byId("save-current-account").addEventListener("click", saveCurrentAccount);
   byId("start-login").addEventListener("click", startLogin);
   byId("logout-login").addEventListener("click", logoutLogin);
@@ -1961,6 +2100,16 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
   byId("copy-final-output").addEventListener("click", () => {
     copyFinalOutput().catch((error) => {
+      byId("raw-output").textContent = error instanceof Error ? error.message : String(error);
+    });
+  });
+  byId("copy-command-preview").addEventListener("click", () => {
+    copyPanelText("command-preview", "copy-command-preview").catch((error) => {
+      byId("raw-output").textContent = error instanceof Error ? error.message : String(error);
+    });
+  });
+  byId("copy-raw-output").addEventListener("click", () => {
+    copyPanelText("raw-output", "copy-raw-output").catch((error) => {
       byId("raw-output").textContent = error instanceof Error ? error.message : String(error);
     });
   });

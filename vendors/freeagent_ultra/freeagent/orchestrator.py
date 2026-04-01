@@ -56,17 +56,7 @@ class Orchestrator:
     def ask(self, goal: str, targets: list[str] | None = None) -> AskResult:
         summary, candidates = self.scan(goal, targets)
         tokens = _extract_goal_keywords(goal)
-        compact = goal.strip().replace(" ", "").lower()
-        if _goal_is_low_signal(goal, tokens) and compact in {"됨?", "되나?", "가능?", "돼?", "되냐?", "ok?", "works?", "possible?"}:
-            return AskResult(
-                answer="요청이 너무 짧거나 모호해서 바로 답변하기 어렵습니다. 예: '센서 목록 화면 구조를 설계해줘'처럼 목표를 구체적으로 적어주세요.",
-                provider="guard",
-                details={
-                    "stack": summary.stack,
-                    "targets": [],
-                    "candidate_files": [],
-                },
-            )
+        low_signal = _goal_is_low_signal(goal, tokens)
         selected = targets or [c.path for c in candidates[:2]]
         prompt_lines = [
             "You are helping with a software project.",
@@ -77,6 +67,15 @@ class Orchestrator:
             f"Request: {goal}",
             f"Detected stack: {summary.stack}",
         ]
+        if low_signal:
+            prompt_lines.extend(
+                [
+                    "The request is underspecified.",
+                    "Do not refuse.",
+                    "First state the most likely interpretation in one short sentence.",
+                    "Then ask up to 3 short clarifying questions or provide the smallest safe next step.",
+                ]
+            )
         if selected:
             prompt_lines.append("Relevant targets:")
             prompt_lines.extend(f"- {path}" for path in selected)
@@ -104,6 +103,42 @@ class Orchestrator:
                 "stack": summary.stack,
                 "targets": selected,
                 "candidate_files": [c.path for c in candidates[:3]],
+            },
+        )
+
+    def prompt(self, goal: str, targets: list[str] | None = None) -> AskResult:
+        summary, candidates = self.scan(goal, targets)
+        selected = targets or [c.path for c in candidates[:4]]
+        prompt_lines = [
+            "You are helping with a software project.",
+            "Answer naturally and directly.",
+            "You may discuss likely code changes, edit points, tradeoffs, and next steps.",
+            "Do not claim files were edited unless an apply/edit command was explicitly requested and completed.",
+            f"User request: {goal}",
+            f"Detected stack: {summary.stack}",
+        ]
+        if selected:
+            prompt_lines.append("Likely relevant files:")
+            prompt_lines.extend(f"- {path}" for path in selected)
+        if candidates:
+            prompt_lines.append("Top candidates:")
+            prompt_lines.extend(f"- {item.path} score={item.score}" for item in candidates[:6])
+        sample_summaries = []
+        for path in selected[:3]:
+            preview = summary.summaries.get(path)
+            if preview:
+                sample_summaries.append(f"- {' '.join(str(preview).split())[:240]}")
+        if sample_summaries:
+            prompt_lines.append("Context:")
+            prompt_lines.extend(sample_summaries)
+        resp, provider = self.providers.generate("\n".join(prompt_lines))
+        return AskResult(
+            answer=resp,
+            provider=provider,
+            details={
+                "stack": summary.stack,
+                "targets": selected,
+                "candidate_files": [c.path for c in candidates[:6]],
             },
         )
 
