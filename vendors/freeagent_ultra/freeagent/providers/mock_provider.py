@@ -15,11 +15,16 @@ class MockProvider(BaseProvider):
         
         # 1. Routing logic
         if "classify the user request" in pl or "router for an ai agent" in pl:
+            if any(k in pl for k in ("안녕", "hello", "hi", "누구니")):
+                return "chat"
             if any(k in pl for k in ("자산", "asset")):
                 return "asset"
             if "research" in pl:
                 return "research"
             return "coding"
+            
+        if "helpful ai assistant" in pl:
+            return "안녕하세요! 저는 Carbonet 시스템을 돕는 AI 어시스턴트입니다. 무엇을 도와드릴까요?"
             
         # 2. Planning logic
         if "break down the user's request" in pl or "planner" in pl:
