@@ -1,0 +1,7 @@
+[Unit]
+Description=Carbonet Codex account scan
+
+[Service]
+Type=oneshot
+Environment=CARBONET_INSTANCE_ID=default
+ExecStart=/opt/util/codex/scripts/account-scan.sh ${CARBONET_INSTANCE_ID}

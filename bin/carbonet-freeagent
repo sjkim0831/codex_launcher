@@ -18,5 +18,7 @@ fi
 export PYTHONPATH="$FREEAGENT_HOME${PYTHONPATH:+:$PYTHONPATH}"
 export FREEAGENT_ENV_FILE="${FREEAGENT_ENV_FILE:-$SCRIPT_DIR/.env.freeagent}"
 STATE_KEY="$(pwd | tr '/ :' '___')"
-export FREEAGENT_STATE_ROOT="${FREEAGENT_STATE_ROOT:-/tmp/carbonet-freeagent-state/${USER:-user}/$STATE_KEY}"
+DEFAULT_STATE_ROOT="$SCRIPT_DIR/data/freeagent-state/${USER:-user}/$STATE_KEY"
+mkdir -p "$DEFAULT_STATE_ROOT"
+export FREEAGENT_STATE_ROOT="${FREEAGENT_STATE_ROOT:-$DEFAULT_STATE_ROOT}"
 exec "$VENV_DIR/bin/python" -m freeagent.cli "$@"

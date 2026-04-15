@@ -1,0 +1,16 @@
+{
+  "projects": [
+    {
+      "id": "carbonet",
+      "label": "Carbonet Local 18000",
+      "pathContains": "/opt/projects/carbonet",
+      "healthUrl": "http://127.0.0.1:18000/actuator/health",
+      "commands": {
+        "start": "bash ops/scripts/start-18000.sh",
+        "stop": "bash ops/scripts/stop-18000.sh",
+        "restart": "bash ops/scripts/restart-18000.sh",
+        "verify": "bash ops/scripts/codex-verify-18000-freshness.sh"
+      }
+    }
+  ]
+}

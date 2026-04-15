@@ -7,7 +7,17 @@
       "kind": "shell",
       "description": "현재 Codex 로그인 상태 확인",
       "shell": "codex login status",
-      "workspaceScoped": false
+      "workspaceScoped": false,
+      "runtimePreset": "saver"
+    },
+    {
+      "id": "account-scan",
+      "label": "계정 상태 전체 스캔",
+      "group": "ops",
+      "kind": "system",
+      "description": "14개 모든 계정의 로그인 생사 여부 및 쿼터를 실시간 정밀 스캔",
+      "workspaceScoped": false,
+      "runtimePreset": "saver"
     },
     {
       "id": "git-status",
@@ -15,7 +25,8 @@
       "group": "repo",
       "kind": "shell",
       "description": "현재 workspace의 git 상태 요약",
-      "shell": "git status --short"
+      "shell": "git status --short",
+      "runtimePreset": "saver"
     },
     {
       "id": "git-diff-stat",
@@ -23,7 +34,8 @@
       "group": "repo",
       "kind": "shell",
       "description": "변경 파일 통계 확인",
-      "shell": "git diff --stat"
+      "shell": "git diff --stat",
+      "runtimePreset": "saver"
     },
     {
       "id": "backend-package",
@@ -32,7 +44,9 @@
       "kind": "shell",
       "description": "백엔드 패키징 검증",
       "shell": "mvn -q -DskipTests package",
-      "workspaceId": "carbonet-root"
+      "workspaceId": "carbonet-root",
+      "preferredAccountType": "paid",
+      "runtimePreset": "lite"
     },
     {
       "id": "frontend-build",
@@ -41,7 +55,9 @@
       "kind": "shell",
       "description": "frontend 빌드 검증",
       "shell": "npm run build",
-      "workspaceId": "carbonet-frontend"
+      "workspaceId": "carbonet-frontend",
+      "preferredAccountType": "paid",
+      "runtimePreset": "lite"
     },
     {
       "id": "freeagent-doctor",
@@ -50,7 +66,8 @@
       "kind": "shell",
       "description": "vendored FreeAgent 런타임 상태 확인",
       "shell": "/opt/util/codex/bin/carbonet-freeagent doctor",
-      "workspaceId": "carbonet-root"
+      "workspaceId": "carbonet-root",
+      "runtimePreset": "saver"
     },
     {
       "id": "freeagent-inspect",
@@ -59,7 +76,8 @@
       "kind": "shell",
       "description": "현재 workspace 구조를 FreeAgent 기준으로 분석",
       "shell": "/opt/util/codex/bin/carbonet-freeagent inspect",
-      "workspaceId": "carbonet-root"
+      "workspaceId": "carbonet-root",
+      "runtimePreset": "lite"
     },
     {
       "id": "codex-structure-summary",
@@ -67,8 +85,11 @@
       "group": "codex",
       "kind": "codex",
       "description": "선택 workspace 구조와 주요 진입점을 요약",
-      "promptTemplate": "현재 작업공간 구조, 핵심 진입점, 자주 건드리는 경로를 짧게 요약해줘.",
-      "fullAuto": true
+      "promptTemplate": "작업공간 구조, 핵심 진입점, 주요 수정 경로를 짧게 요약해줘.",
+      "verbosePromptTemplate": "현재 작업공간의 디렉터리 구조를 빠르게 훑고, 실제 수정이 자주 일어나는 핵심 진입점과 주요 수정 경로를 정리해줘. 처음 보는 사람도 바로 따라갈 수 있게 파일/폴더 기준으로 간단히 설명해줘.",
+      "fullAuto": true,
+      "preferredAccountType": "paid",
+      "runtimePreset": "summary"
     },
     {
       "id": "codex-change-review",
@@ -76,8 +97,11 @@
       "group": "codex",
       "kind": "codex",
       "description": "현재 변경사항 기준 위험도 높은 이슈 리뷰",
-      "promptTemplate": "현재 작업공간 기준으로 코드 리뷰를 해줘. 버그, 회귀 위험, 테스트 누락을 심각도 순으로 정리해줘.",
-      "fullAuto": true
+      "promptTemplate": "코드 리뷰: 버그, 회귀 위험, 테스트 누락을 심각도 순으로 정리해줘.",
+      "verbosePromptTemplate": "현재 변경사항을 코드 리뷰해줘. 버그 가능성, 동작 회귀 위험, 누락된 테스트를 우선 보고, 심각도 높은 순서로 정리해줘. 각 이슈마다 왜 문제인지와 확인이 필요한 파일/동작을 함께 적어줘.",
+      "fullAuto": true,
+      "preferredAccountType": "paid",
+      "runtimePreset": "review"
     },
     {
       "id": "codex-build-debug",
@@ -85,8 +109,21 @@
       "group": "codex",
       "kind": "codex",
       "description": "빌드 실패 원인 분석용 프롬프트",
-      "promptTemplate": "현재 작업공간에서 최근 빌드 실패 원인을 찾고, 가장 가능성 높은 수정 포인트를 제안해줘.",
-      "fullAuto": true
+      "promptTemplate": "최근 빌드 실패 원인과 우선 수정 포인트를 찾아줘.",
+      "verbosePromptTemplate": "최근 빌드 또는 패키징 실패 원인을 찾아줘. 에러가 난 지점을 기준으로 원인 후보를 좁히고, 가장 먼저 수정해야 할 포인트와 확인 순서를 제안해줘.",
+      "fullAuto": true,
+      "preferredAccountType": "paid",
+      "runtimePreset": "debug"
+    },
+    {
+      "id": "freeagent-asset-graph",
+      "label": "Asset Graph",
+      "group": "freeagent",
+      "kind": "shell",
+      "description": "LangGraph 기반 자산 관리 오케스트레이션 실행",
+      "shell": "/opt/util/codex/bin/carbonet-freeagent graph '자산 관리 시스템에서 현재 가동 중인 센서 목록을 스캔하고 인벤토리에 반영해줘.'",
+      "workspaceId": "carbonet-root",
+      "runtimePreset": "balanced"
     }
   ]
 }

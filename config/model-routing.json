@@ -1,0 +1,75 @@
+{
+  "enabled": true,
+  "memorySafeSingleLocalModel": true,
+  "escalateHardTasksToCodex": true,
+  "allowParallelLocalWorkers": true,
+  "parallelLocalWorkers": 3,
+  "parallelLocalFinalSynthesizer": "codex",
+  "parallelLocalFinalSynthesizerModel": "qwen2.5-coder:7b",
+  "simpleTaskLocalParallel": true,
+  "simpleTaskLocalPresets": [
+    "saver",
+    "question",
+    "summary",
+    "lite"
+  ],
+  "parallelAccountMax": 14,
+  "parallelAccountPresetLimits": {
+    "saver": 0,
+    "question": 0,
+    "summary": 0,
+    "lite": 0,
+    "migration": 6,
+    "implementation": 6,
+    "balanced": 6,
+    "review": 10,
+    "debug": 10,
+    "full": 14,
+    "custom": 6
+  },
+  "routes": {
+    "question": "qwen2.5-coder:1.5b",
+    "summary": "qwen2.5-coder:3b",
+    "migration": "qwen2.5-coder:7b",
+    "implementation": "qwen2.5-coder:7b",
+    "review": "codex",
+    "debug": "codex",
+    "lite": "qwen2.5-coder:3b",
+    "balanced": "qwen2.5-coder:7b",
+    "full": "codex"
+  },
+  "hardTaskPresets": [
+    "review",
+    "debug",
+    "full"
+  ],
+  "scoutModels": {
+    "question": [
+      "qwen2.5-coder:1.5b",
+      "qwen2.5-coder:3b",
+      "qwen2.5-coder:7b"
+    ],
+    "summary": [
+      "qwen2.5-coder:1.5b",
+      "qwen2.5-coder:3b",
+      "qwen2.5-coder:7b"
+    ],
+    "migration": [
+      "qwen2.5-coder:3b",
+      "qwen2.5-coder:7b"
+    ],
+    "implementation": [
+      "qwen2.5-coder:3b",
+      "qwen2.5-coder:7b"
+    ],
+    "lite": [
+      "qwen2.5-coder:1.5b",
+      "qwen2.5-coder:3b",
+      "qwen2.5-coder:7b"
+    ],
+    "balanced": [
+      "qwen2.5-coder:3b",
+      "qwen2.5-coder:7b"
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REAL_CODEX_BIN="${REAL_CODEX_BIN:-${CARBONET_REAL_CODEX_BIN:-codex}}"
+INSTANCE_ID="${CARBONET_INSTANCE_ID:-default}"
+OUTPUT_FILE="$(mktemp)"
+
+cleanup() {
+  rm -f "$OUTPUT_FILE"
+}
+trap cleanup EXIT
+
+set +e
+"$REAL_CODEX_BIN" "$@" 2>&1 | tee "$OUTPUT_FILE"
+exit_code=${PIPESTATUS[0]}
+set -e
+
+python3 "$SCRIPT_DIR/app/server.py" \
+  --app-root "$SCRIPT_DIR" \
+  ingest-codex-output \
+  --instance "$INSTANCE_ID" \
+  --exit-code "$exit_code" \
+  --output-file "$OUTPUT_FILE" >/dev/null || true
+
+exit "$exit_code"

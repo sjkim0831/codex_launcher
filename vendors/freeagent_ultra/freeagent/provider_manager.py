@@ -32,26 +32,24 @@ class ProviderManager:
     def generate(self, prompt: str) -> tuple[str, str]:
         errors: list[str] = []
         for p in self.providers:
-            is_available = False
-            try:
-                is_available = p.available()
-            except Exception as e:
-                errors.append(f"{p.name}: availability check failed: {e}")
-            if not is_available and p.name != self.preferred:
+            # If this is the preferred provider, try it even if .available() was False
+            if p.name == self.preferred:
+                try:
+                    return p.generate(prompt), p.name
+                except Exception as e:
+                    errors.append(f"{p.name}: {e}")
+                    # If preferred fails, we do NOT fallback to others unless preferred was 'mock'
+                    if self.preferred != "mock":
+                        break
+                    continue
+            
+            # For non-preferred providers, only use if available
+            if p.available():
+                try:
+                    return p.generate(prompt), p.name
+                except Exception as e:
+                    errors.append(f"{p.name}: {e}")
+            else:
                 errors.append(f"{p.name}: unavailable")
-                continue
-            try:
-                return p.generate(prompt), p.name
-            except Exception as e:
-                errors.append(f"{p.name}: {e}")
 
-        if self.preferred == "mock":
-            fallback = MockProvider()
-            try:
-                return fallback.generate(prompt), fallback.name
-            except Exception as e:
-                errors.append(f"{fallback.name}: {e}")
-
-        if not errors:
-            errors.append("no provider configured")
         return f"[provider_error] {' | '.join(errors)}", "none"

@@ -60,6 +60,13 @@ class AskResult:
     provider: str
     details: dict[str, Any] = field(default_factory=dict)
 
+
+@dataclass
+class GraphRunResult:
+    final_answer: str
+    state: dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
+
 @dataclass
 class ProjectSummary:
     stack: str

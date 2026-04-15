@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Carbonet Codex account scan periodically
+
+[Timer]
+OnBootSec=2m
+OnUnitActiveSec=15m
+Persistent=true
+Unit=carbonet-account-scan.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,49 @@
+{
+  "defaultProjectId": "carbonet",
+  "projects": [
+    {
+      "id": "carbonet",
+      "label": "Carbonet",
+      "path": "/opt/projects/carbonet",
+      "adapterType": "screenbuilder-carbonet-adapter",
+      "commonAdapter": "screenbuilder-runtime-common-adapter",
+      "appModule": "apps/carbonet-app",
+      "runtimePort": 18000,
+      "healthUrl": "http://127.0.0.1:18000/actuator/health",
+      "commonModules": [
+        "modules/carbonet-mapper-infra",
+        "modules/carbonet-web-support",
+        "modules/carbonet-contract-metadata",
+        "modules/carbonet-builder-observability",
+        "modules/platform-request-contracts",
+        "modules/platform-service-contracts",
+        "modules/platform-help-content",
+        "modules/platform-help",
+        "modules/platform-observability-query",
+        "modules/platform-observability-web",
+        "modules/platform-observability-payload",
+        "modules/platform-version-control",
+        "modules/platform-runtime-control",
+        "modules/screenbuilder-core",
+        "modules/screenbuilder-runtime-common-adapter"
+      ],
+      "projectModules": [
+        "modules/screenbuilder-carbonet-adapter",
+        "apps/carbonet-app"
+      ],
+      "commands": {
+        "buildCommon": "mvn -q -DskipTests -pl modules/carbonet-mapper-infra,modules/carbonet-web-support,modules/carbonet-contract-metadata,modules/carbonet-builder-observability,modules/platform-request-contracts,modules/platform-service-contracts,modules/platform-help-content,modules/platform-help,modules/platform-observability-query,modules/platform-observability-web,modules/platform-observability-payload,modules/platform-version-control,modules/platform-runtime-control,modules/screenbuilder-core,modules/screenbuilder-runtime-common-adapter -am install",
+        "installCommon": "mvn -q -DskipTests -pl modules/carbonet-mapper-infra,modules/carbonet-web-support,modules/carbonet-contract-metadata,modules/carbonet-builder-observability,modules/platform-request-contracts,modules/platform-service-contracts,modules/platform-help-content,modules/platform-help,modules/platform-observability-query,modules/platform-observability-web,modules/platform-observability-payload,modules/platform-version-control,modules/platform-runtime-control,modules/screenbuilder-core,modules/screenbuilder-runtime-common-adapter -am install",
+        "buildProject": "mvn -q -DskipTests -pl apps/carbonet-app -am package",
+        "buildAll": "if [ -f frontend/package.json ]; then (cd frontend && npm run build); fi && mvn -q -DskipTests package",
+        "restart": "bash ops/scripts/restart-18000.sh",
+        "verify": "bash ops/scripts/codex-verify-18000-freshness.sh",
+        "sqlBackup": "/opt/util/cubrid/11.2/scripts/backup_sql.sh",
+        "physicalBackup": "/opt/util/cubrid/11.2/scripts/backup_physical.sh",
+        "backupStatus": "/opt/util/cubrid/11.2/scripts/check_backup_status.sh",
+        "trafficStatus": "ss -ltnp | grep ':18000' || true; curl -fsS http://127.0.0.1:18000/actuator/health || true",
+        "trafficTail": "tail -n 120 var/logs/carbonet-18000.log 2>/dev/null || tail -n 120 /tmp/carbonet-18000.log 2>/dev/null || true"
+      }
+    }
+  ]
+}

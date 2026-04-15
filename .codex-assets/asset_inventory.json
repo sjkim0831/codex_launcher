@@ -1,0 +1,1400 @@
+[
+  {
+    "id": "UI-PaymentHistoryMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/payment-history/PaymentHistoryMigrationPage.tsx",
+    "name": "PaymentHistoryMigrationPage"
+  },
+  {
+    "id": "UI-AdminListMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/admin-list/AdminListMigrationPage.tsx",
+    "name": "AdminListMigrationPage"
+  },
+  {
+    "id": "UI-EmissionLcaMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/emission-lca/EmissionLcaMigrationPage.tsx",
+    "name": "EmissionLcaMigrationPage"
+  },
+  {
+    "id": "UI-NotificationCenterMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/notification-center/NotificationCenterMigrationPage.tsx",
+    "name": "NotificationCenterMigrationPage"
+  },
+  {
+    "id": "UI-SensorAddMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/sensor-add/SensorAddMigrationPage.tsx",
+    "name": "SensorAddMigrationPage"
+  },
+  {
+    "id": "UI-DeptRoleMappingMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/dept-role-mapping/DeptRoleMappingMigrationPage.tsx",
+    "name": "DeptRoleMappingMigrationPage"
+  },
+  {
+    "id": "UI-ObservabilityMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/observability/ObservabilityMigrationPage.tsx",
+    "name": "ObservabilityMigrationPage"
+  },
+  {
+    "id": "UI-ExternalMonitoringMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/external-monitoring/ExternalMonitoringMigrationPage.tsx",
+    "name": "ExternalMonitoringMigrationPage"
+  },
+  {
+    "id": "UI-MemberRegisterMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/member-register/MemberRegisterMigrationPage.tsx",
+    "name": "MemberRegisterMigrationPage"
+  },
+  {
+    "id": "UI-MypageStaffMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/mypage-staff/MypageStaffMigrationPage.tsx",
+    "name": "MypageStaffMigrationPage"
+  },
+  {
+    "id": "UI-ExternalUsageMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/external-usage/ExternalUsageMigrationPage.tsx",
+    "name": "ExternalUsageMigrationPage"
+  },
+  {
+    "id": "UI-TradeListMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/trade-list/TradeListMigrationPage.tsx",
+    "name": "TradeListMigrationPage"
+  },
+  {
+    "id": "UI-MypageCompanyMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/mypage-company/MypageCompanyMigrationPage.tsx",
+    "name": "MypageCompanyMigrationPage"
+  },
+  {
+    "id": "UI-AdminPermissionMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/admin-permissions/AdminPermissionMigrationPage.tsx",
+    "name": "AdminPermissionMigrationPage"
+  },
+  {
+    "id": "UI-SecurityMonitoringMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/security-monitoring/SecurityMonitoringMigrationPage.tsx",
+    "name": "SecurityMonitoringMigrationPage"
+  },
+  {
+    "id": "UI-Co2ProductionListMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/co2-production-list/Co2ProductionListMigrationPage.tsx",
+    "name": "Co2ProductionListMigrationPage"
+  },
+  {
+    "id": "UI-IpWhitelistMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/ip-whitelist/IpWhitelistMigrationPage.tsx",
+    "name": "IpWhitelistMigrationPage"
+  },
+  {
+    "id": "UI-ExternalMaintenanceMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/external-maintenance/ExternalMaintenanceMigrationPage.tsx",
+    "name": "ExternalMaintenanceMigrationPage"
+  },
+  {
+    "id": "UI-PasswordResetMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/password-reset/PasswordResetMigrationPage.tsx",
+    "name": "PasswordResetMigrationPage"
+  },
+  {
+    "id": "UI-EmissionReportSubmitMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/emission-report-submit/EmissionReportSubmitMigrationPage.tsx",
+    "name": "EmissionReportSubmitMigrationPage"
+  },
+  {
+    "id": "UI-JoinCompanyStatusMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/join-company-status/JoinCompanyStatusMigrationPage.tsx",
+    "name": "JoinCompanyStatusMigrationPage"
+  },
+  {
+    "id": "UI-SensorListMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/sensor-list/SensorListMigrationPage.tsx",
+    "name": "SensorListMigrationPage"
+  },
+  {
+    "id": "UI-EduApplyMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/edu-apply/EduApplyMigrationPage.tsx",
+    "name": "EduApplyMigrationPage"
+  },
+  {
+    "id": "UI-TagManagementMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/tag-management/TagManagementMigrationPage.tsx",
+    "name": "TagManagementMigrationPage"
+  },
+  {
+    "id": "UI-QnaListMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/qna-list/QnaListMigrationPage.tsx",
+    "name": "QnaListMigrationPage"
+  },
+  {
+    "id": "UI-PaymentReceiptMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/payment-receipt/PaymentReceiptMigrationPage.tsx",
+    "name": "PaymentReceiptMigrationPage"
+  },
+  {
+    "id": "UI-EmissionSiteManagementMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/emission-site-management/EmissionSiteManagementMigrationPage.tsx",
+    "name": "EmissionSiteManagementMigrationPage"
+  },
+  {
+    "id": "UI-TradeSellMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/trade-sell/TradeSellMigrationPage.tsx",
+    "name": "TradeSellMigrationPage"
+  },
+  {
+    "id": "UI-RefundProcessMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/refund-process/RefundProcessMigrationPage.tsx",
+    "name": "RefundProcessMigrationPage"
+  },
+  {
+    "id": "UI-TradePriceAlertMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/trade-price-alert/TradePriceAlertMigrationPage.tsx",
+    "name": "TradePriceAlertMigrationPage"
+  },
+  {
+    "id": "UI-Co2CreditMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/co2-credit/Co2CreditMigrationPage.tsx",
+    "name": "Co2CreditMigrationPage"
+  },
+  {
+    "id": "UI-CertificateReportEditMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/certificate-report-edit/CertificateReportEditMigrationPage.tsx",
+    "name": "CertificateReportEditMigrationPage"
+  },
+  {
+    "id": "UI-ExternalKeysMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/external-keys/ExternalKeysMigrationPage.tsx",
+    "name": "ExternalKeysMigrationPage"
+  },
+  {
+    "id": "UI-PageManagementMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/page-management/PageManagementMigrationPage.tsx",
+    "name": "PageManagementMigrationPage"
+  },
+  {
+    "id": "UI-MtnStatusMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/mtn-status/MtnStatusMigrationPage.tsx",
+    "name": "MtnStatusMigrationPage"
+  },
+  {
+    "id": "UI-EmissionResultListMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/emission-result-list/EmissionResultListMigrationPage.tsx",
+    "name": "EmissionResultListMigrationPage"
+  },
+  {
+    "id": "UI-MemberDetailMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/member-detail/MemberDetailMigrationPage.tsx",
+    "name": "MemberDetailMigrationPage"
+  },
+  {
+    "id": "UI-MonitoringTrackMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/monitoring-track/MonitoringTrackMigrationPage.tsx",
+    "name": "MonitoringTrackMigrationPage"
+  },
+  {
+    "id": "UI-PaymentRefundAccountMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/payment-refund-account/PaymentRefundAccountMigrationPage.tsx",
+    "name": "PaymentRefundAccountMigrationPage"
+  },
+  {
+    "id": "UI-ProjectVersionManagementMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/project-version-management/ProjectVersionManagementMigrationPage.tsx",
+    "name": "ProjectVersionManagementMigrationPage"
+  },
+  {
+    "id": "UI-MypagePasswordMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/mypage-password/MypagePasswordMigrationPage.tsx",
+    "name": "MypagePasswordMigrationPage"
+  },
+  {
+    "id": "UI-BackupConfigMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/backup-config/BackupConfigMigrationPage.tsx",
+    "name": "BackupConfigMigrationPage"
+  },
+  {
+    "id": "UI-EduCourseListMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/edu-course-list/EduCourseListMigrationPage.tsx",
+    "name": "EduCourseListMigrationPage"
+  },
+  {
+    "id": "UI-EmissionValidateMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/emission-validate/EmissionValidateMigrationPage.tsx",
+    "name": "EmissionValidateMigrationPage"
+  },
+  {
+    "id": "UI-ExternalConnectionAddMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/external-connection-add/ExternalConnectionAddMigrationPage.tsx",
+    "name": "ExternalConnectionAddMigrationPage"
+  },
+  {
+    "id": "UI-EmissionGwpValuesMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/emission-gwp-values/EmissionGwpValuesMigrationPage.tsx",
+    "name": "EmissionGwpValuesMigrationPage"
+  },
+  {
+    "id": "UI-FullStackManagementMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/menu-management/FullStackManagementMigrationPage.tsx",
+    "name": "FullStackManagementMigrationPage"
+  },
+  {
+    "id": "UI-FaqMenuManagementMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/menu-management/FaqMenuManagementMigrationPage.tsx",
+    "name": "FaqMenuManagementMigrationPage"
+  },
+  {
+    "id": "UI-MenuManagementMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/menu-management/MenuManagementMigrationPage.tsx",
+    "name": "MenuManagementMigrationPage"
+  },
+  {
+    "id": "UI-Co2AnalysisMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/co2-analysis/Co2AnalysisMigrationPage.tsx",
+    "name": "Co2AnalysisMigrationPage"
+  },
+  {
+    "id": "UI-SchedulerManagementMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/scheduler-management/SchedulerManagementMigrationPage.tsx",
+    "name": "SchedulerManagementMigrationPage"
+  },
+  {
+    "id": "UI-EduProgressMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/edu-progress/EduProgressMigrationPage.tsx",
+    "name": "EduProgressMigrationPage"
+  },
+  {
+    "id": "UI-AuthGroupMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/auth-groups/AuthGroupMigrationPage.tsx",
+    "name": "AuthGroupMigrationPage"
+  },
+  {
+    "id": "UI-SecurityAuditMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/security-audit/SecurityAuditMigrationPage.tsx",
+    "name": "SecurityAuditMigrationPage"
+  },
+  {
+    "id": "UI-MonitoringExportMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/monitoring-export/MonitoringExportMigrationPage.tsx",
+    "name": "MonitoringExportMigrationPage"
+  },
+  {
+    "id": "UI-Co2IntegrityMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/co2-integrity/Co2IntegrityMigrationPage.tsx",
+    "name": "Co2IntegrityMigrationPage"
+  },
+  {
+    "id": "UI-TradeApproveMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/trade-approve/TradeApproveMigrationPage.tsx",
+    "name": "TradeApproveMigrationPage"
+  },
+  {
+    "id": "UI-MemberStatsMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/member-stats/MemberStatsMigrationPage.tsx",
+    "name": "MemberStatsMigrationPage"
+  },
+  {
+    "id": "UI-MonitoringStatisticsMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/monitoring-statistics/MonitoringStatisticsMigrationPage.tsx",
+    "name": "MonitoringStatisticsMigrationPage"
+  },
+  {
+    "id": "UI-MemberListMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/member-list/MemberListMigrationPage.tsx",
+    "name": "MemberListMigrationPage"
+  },
+  {
+    "id": "UI-SystemCodeMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/system-code/SystemCodeMigrationPage.tsx",
+    "name": "SystemCodeMigrationPage"
+  },
+  {
+    "id": "UI-EmissionSurveyAdminDataMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/emission-survey-admin-data/EmissionSurveyAdminDataMigrationPage.tsx",
+    "name": "EmissionSurveyAdminDataMigrationPage"
+  },
+  {
+    "id": "UI-ExternalLogsMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/external-logs/ExternalLogsMigrationPage.tsx",
+    "name": "ExternalLogsMigrationPage"
+  },
+  {
+    "id": "UI-ScreenFlowManagementMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/screen-management/ScreenFlowManagementMigrationPage.tsx",
+    "name": "ScreenFlowManagementMigrationPage"
+  },
+  {
+    "id": "UI-ScreenMenuAssignmentManagementMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/screen-management/ScreenMenuAssignmentManagementMigrationPage.tsx",
+    "name": "ScreenMenuAssignmentManagementMigrationPage"
+  },
+  {
+    "id": "UI-EduCourseDetailMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/edu-course-detail/EduCourseDetailMigrationPage.tsx",
+    "name": "EduCourseDetailMigrationPage"
+  },
+  {
+    "id": "UI-NoticeListMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/notice-list/NoticeListMigrationPage.tsx",
+    "name": "NoticeListMigrationPage"
+  },
+  {
+    "id": "UI-PlatformStudioMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/platform-studio/PlatformStudioMigrationPage.tsx",
+    "name": "PlatformStudioMigrationPage"
+  },
+  {
+    "id": "UI-EmissionDefinitionStudioMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/emission-definition-studio/EmissionDefinitionStudioMigrationPage.tsx",
+    "name": "EmissionDefinitionStudioMigrationPage"
+  },
+  {
+    "id": "UI-QnaCategoryMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/qna-category/QnaCategoryMigrationPage.tsx",
+    "name": "QnaCategoryMigrationPage"
+  },
+  {
+    "id": "UI-FileManagementMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/file-management/FileManagementMigrationPage.tsx",
+    "name": "FileManagementMigrationPage"
+  },
+  {
+    "id": "UI-PaymentPayMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/payment-pay/PaymentPayMigrationPage.tsx",
+    "name": "PaymentPayMigrationPage"
+  },
+  {
+    "id": "UI-EmissionProjectListMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/emission-project-list/EmissionProjectListMigrationPage.tsx",
+    "name": "EmissionProjectListMigrationPage"
+  },
+  {
+    "id": "UI-AssetImpactMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/asset-inventory/AssetImpactMigrationPage.tsx",
+    "name": "AssetImpactMigrationPage"
+  },
+  {
+    "id": "UI-AssetDetailMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/asset-inventory/AssetDetailMigrationPage.tsx",
+    "name": "AssetDetailMigrationPage"
+  },
+  {
+    "id": "UI-AssetGapMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/asset-inventory/AssetGapMigrationPage.tsx",
+    "name": "AssetGapMigrationPage"
+  },
+  {
+    "id": "UI-AssetLifecycleMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/asset-inventory/AssetLifecycleMigrationPage.tsx",
+    "name": "AssetLifecycleMigrationPage"
+  },
+  {
+    "id": "UI-AssetInventoryMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/asset-inventory/AssetInventoryMigrationPage.tsx",
+    "name": "AssetInventoryMigrationPage"
+  },
+  {
+    "id": "UI-FunctionManagementMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/function-management/FunctionManagementMigrationPage.tsx",
+    "name": "FunctionManagementMigrationPage"
+  },
+  {
+    "id": "UI-ExternalSyncMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/external-sync/ExternalSyncMigrationPage.tsx",
+    "name": "ExternalSyncMigrationPage"
+  },
+  {
+    "id": "UI-BatchManagementMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/batch-management/BatchManagementMigrationPage.tsx",
+    "name": "BatchManagementMigrationPage"
+  },
+  {
+    "id": "UI-TradeMarketMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/trade-market/TradeMarketMigrationPage.tsx",
+    "name": "TradeMarketMigrationPage"
+  },
+  {
+    "id": "UI-CertificateApplyMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/certificate-apply/CertificateApplyMigrationPage.tsx",
+    "name": "CertificateApplyMigrationPage"
+  },
+  {
+    "id": "UI-MonitoringAlertsMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/monitoring-dashboard/MonitoringAlertsMigrationPage.tsx",
+    "name": "MonitoringAlertsMigrationPage"
+  },
+  {
+    "id": "UI-MonitoringDashboardMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/monitoring-dashboard/MonitoringDashboardMigrationPage.tsx",
+    "name": "MonitoringDashboardMigrationPage"
+  },
+  {
+    "id": "UI-MonitoringRealtimeMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/monitoring-dashboard/MonitoringRealtimeMigrationPage.tsx",
+    "name": "MonitoringRealtimeMigrationPage"
+  },
+  {
+    "id": "UI-TradeReportMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/trade-report/TradeReportMigrationPage.tsx",
+    "name": "TradeReportMigrationPage"
+  },
+  {
+    "id": "UI-EduContentMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/edu-content/EduContentMigrationPage.tsx",
+    "name": "EduContentMigrationPage"
+  },
+  {
+    "id": "UI-MonitoringShareMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/monitoring-share/MonitoringShareMigrationPage.tsx",
+    "name": "MonitoringShareMigrationPage"
+  },
+  {
+    "id": "UI-MypageEmailMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/mypage-email/MypageEmailMigrationPage.tsx",
+    "name": "MypageEmailMigrationPage"
+  },
+  {
+    "id": "UI-PopupListMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/popup-list/PopupListMigrationPage.tsx",
+    "name": "PopupListMigrationPage"
+  },
+  {
+    "id": "UI-TradeBuyRequestMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/trade-buy-request/TradeBuyRequestMigrationPage.tsx",
+    "name": "TradeBuyRequestMigrationPage"
+  },
+  {
+    "id": "UI-CompanyDetailMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/company-detail/CompanyDetailMigrationPage.tsx",
+    "name": "CompanyDetailMigrationPage"
+  },
+  {
+    "id": "UI-ExternalConnectionEditMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/external-connection-edit/ExternalConnectionEditMigrationPage.tsx",
+    "name": "ExternalConnectionEditMigrationPage"
+  },
+  {
+    "id": "UI-FaqManagementMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/faq-management/FaqManagementMigrationPage.tsx",
+    "name": "FaqManagementMigrationPage"
+  },
+  {
+    "id": "UI-VerificationAssetManagementMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/environment-management/VerificationAssetManagementMigrationPage.tsx",
+    "name": "VerificationAssetManagementMigrationPage"
+  },
+  {
+    "id": "UI-VerificationCenterMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/environment-management/VerificationCenterMigrationPage.tsx",
+    "name": "VerificationCenterMigrationPage"
+  },
+  {
+    "id": "UI-EmissionReductionMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/emission-reduction/EmissionReductionMigrationPage.tsx",
+    "name": "EmissionReductionMigrationPage"
+  },
+  {
+    "id": "UI-CodexProvisionMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/codex-provision/CodexProvisionMigrationPage.tsx",
+    "name": "CodexProvisionMigrationPage"
+  },
+  {
+    "id": "UI-PaymentRefundMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/payment-refund/PaymentRefundMigrationPage.tsx",
+    "name": "PaymentRefundMigrationPage"
+  },
+  {
+    "id": "UI-CertificateListMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/certificate-list/CertificateListMigrationPage.tsx",
+    "name": "CertificateListMigrationPage"
+  },
+  {
+    "id": "UI-ExternalConnectionListMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/external-connection-list/ExternalConnectionListMigrationPage.tsx",
+    "name": "ExternalConnectionListMigrationPage"
+  },
+  {
+    "id": "UI-AccessHistoryMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/access-history/AccessHistoryMigrationPage.tsx",
+    "name": "AccessHistoryMigrationPage"
+  },
+  {
+    "id": "UI-PopupEditMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/popup-edit/PopupEditMigrationPage.tsx",
+    "name": "PopupEditMigrationPage"
+  },
+  {
+    "id": "UI-SrWorkbenchMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/sr-workbench/SrWorkbenchMigrationPage.tsx",
+    "name": "SrWorkbenchMigrationPage"
+  },
+  {
+    "id": "UI-CertificatePendingMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/certificate-pending/CertificatePendingMigrationPage.tsx",
+    "name": "CertificatePendingMigrationPage"
+  },
+  {
+    "id": "UI-TradeRejectMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/trade-reject/TradeRejectMigrationPage.tsx",
+    "name": "TradeRejectMigrationPage"
+  },
+  {
+    "id": "UI-SecurityPolicyMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/security-policy/SecurityPolicyMigrationPage.tsx",
+    "name": "SecurityPolicyMigrationPage"
+  },
+  {
+    "id": "UI-EmissionSimulateMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/emission-simulate/EmissionSimulateMigrationPage.tsx",
+    "name": "EmissionSimulateMigrationPage"
+  },
+  {
+    "id": "UI-PerformanceMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/performance/PerformanceMigrationPage.tsx",
+    "name": "PerformanceMigrationPage"
+  },
+  {
+    "id": "UI-ExternalWebhooksMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/external-webhooks/ExternalWebhooksMigrationPage.tsx",
+    "name": "ExternalWebhooksMigrationPage"
+  },
+  {
+    "id": "UI-MonitoringReductionTrendMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/monitoring-reduction-trend/MonitoringReductionTrendMigrationPage.tsx",
+    "name": "MonitoringReductionTrendMigrationPage"
+  },
+  {
+    "id": "UI-EmissionHomeValidateMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/emission-home-validate/EmissionHomeValidateMigrationPage.tsx",
+    "name": "EmissionHomeValidateMigrationPage"
+  },
+  {
+    "id": "UI-LoginHistoryMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/login-history/LoginHistoryMigrationPage.tsx",
+    "name": "LoginHistoryMigrationPage"
+  },
+  {
+    "id": "UI-DbSyncDeployMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/db-sync-deploy/DbSyncDeployMigrationPage.tsx",
+    "name": "DbSyncDeployMigrationPage"
+  },
+  {
+    "id": "UI-VersionManagementMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/version-management/VersionManagementMigrationPage.tsx",
+    "name": "VersionManagementMigrationPage"
+  },
+  {
+    "id": "UI-BoardListMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/board-list/BoardListMigrationPage.tsx",
+    "name": "BoardListMigrationPage"
+  },
+  {
+    "id": "UI-HelpManagementMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/help-management/HelpManagementMigrationPage.tsx",
+    "name": "HelpManagementMigrationPage"
+  },
+  {
+    "id": "UI-TradeStatisticsMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/trade-statistics/TradeStatisticsMigrationPage.tsx",
+    "name": "TradeStatisticsMigrationPage"
+  },
+  {
+    "id": "UI-VirtualIssueMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/virtual-issue/VirtualIssueMigrationPage.tsx",
+    "name": "VirtualIssueMigrationPage"
+  },
+  {
+    "id": "UI-EmissionSurveyAdminMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/emission-survey-admin/EmissionSurveyAdminMigrationPage.tsx",
+    "name": "EmissionSurveyAdminMigrationPage"
+  },
+  {
+    "id": "UI-JoinCompanyRegisterMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/join-company-register/JoinCompanyRegisterMigrationPage.tsx",
+    "name": "JoinCompanyRegisterMigrationPage"
+  },
+  {
+    "id": "UI-JoinCompanyRegisterCompleteMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/join-company-register/JoinCompanyRegisterCompleteMigrationPage.tsx",
+    "name": "JoinCompanyRegisterCompleteMigrationPage"
+  },
+  {
+    "id": "UI-ExternalSchemaMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/external-schema/ExternalSchemaMigrationPage.tsx",
+    "name": "ExternalSchemaMigrationPage"
+  },
+  {
+    "id": "UI-CertificateReportListMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/certificate-report-list/CertificateReportListMigrationPage.tsx",
+    "name": "CertificateReportListMigrationPage"
+  },
+  {
+    "id": "UI-OperationsCenterMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/operations-center/OperationsCenterMigrationPage.tsx",
+    "name": "OperationsCenterMigrationPage"
+  },
+  {
+    "id": "UI-EmissionResultDetailMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/emission-result-detail/EmissionResultDetailMigrationPage.tsx",
+    "name": "EmissionResultDetailMigrationPage"
+  },
+  {
+    "id": "UI-CompanyAccountMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/company-account/CompanyAccountMigrationPage.tsx",
+    "name": "CompanyAccountMigrationPage"
+  },
+  {
+    "id": "UI-EduSurveyMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/edu-survey/EduSurveyMigrationPage.tsx",
+    "name": "EduSurveyMigrationPage"
+  },
+  {
+    "id": "UI-AuthChangeMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/auth-change/AuthChangeMigrationPage.tsx",
+    "name": "AuthChangeMigrationPage"
+  },
+  {
+    "id": "UI-SupportInquiryMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/support-inquiry/SupportInquiryMigrationPage.tsx",
+    "name": "SupportInquiryMigrationPage"
+  },
+  {
+    "id": "UI-Co2DemandListMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/co2-demand-list/Co2DemandListMigrationPage.tsx",
+    "name": "Co2DemandListMigrationPage"
+  },
+  {
+    "id": "UI-CompanyListMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/company-list/CompanyListMigrationPage.tsx",
+    "name": "CompanyListMigrationPage"
+  },
+  {
+    "id": "UI-EmissionManagementMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/emission-management/EmissionManagementMigrationPage.tsx",
+    "name": "EmissionManagementMigrationPage"
+  },
+  {
+    "id": "UI-EmissionLciMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/emission-lci/EmissionLciMigrationPage.tsx",
+    "name": "EmissionLciMigrationPage"
+  },
+  {
+    "id": "UI-JoinCompanyReapplyMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/join-company-reapply/JoinCompanyReapplyMigrationPage.tsx",
+    "name": "JoinCompanyReapplyMigrationPage"
+  },
+  {
+    "id": "UI-Co2SearchMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/co2-search/Co2SearchMigrationPage.tsx",
+    "name": "Co2SearchMigrationPage"
+  },
+  {
+    "id": "UI-MyInquiryMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/my-inquiry/MyInquiryMigrationPage.tsx",
+    "name": "MyInquiryMigrationPage"
+  },
+  {
+    "id": "UI-NewPageMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/new-page/NewPageMigrationPage.tsx",
+    "name": "NewPageMigrationPage"
+  },
+  {
+    "id": "UI-CertificateAuditLogMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/certificate-audit-log/CertificateAuditLogMigrationPage.tsx",
+    "name": "CertificateAuditLogMigrationPage"
+  },
+  {
+    "id": "UI-BannerEditMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/banner-edit/BannerEditMigrationPage.tsx",
+    "name": "BannerEditMigrationPage"
+  },
+  {
+    "id": "UI-BoardAddMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/board-add/BoardAddMigrationPage.tsx",
+    "name": "BoardAddMigrationPage"
+  },
+  {
+    "id": "UI-CertificateStatisticsMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/certificate-statistics/CertificateStatisticsMigrationPage.tsx",
+    "name": "CertificateStatisticsMigrationPage"
+  },
+  {
+    "id": "UI-PaymentVirtualAccountMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/payment-virtual-account/PaymentVirtualAccountMigrationPage.tsx",
+    "name": "PaymentVirtualAccountMigrationPage"
+  },
+  {
+    "id": "UI-MemberApproveMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/member-approve/MemberApproveMigrationPage.tsx",
+    "name": "MemberApproveMigrationPage"
+  },
+  {
+    "id": "UI-CertificateObjectionListMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/certificate-objection-list/CertificateObjectionListMigrationPage.tsx",
+    "name": "CertificateObjectionListMigrationPage"
+  },
+  {
+    "id": "UI-MypageMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/mypage/MypageMigrationPage.tsx",
+    "name": "MypageMigrationPage"
+  },
+  {
+    "id": "UI-MypageNotificationMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/mypage/MypageNotificationMigrationPage.tsx",
+    "name": "MypageNotificationMigrationPage"
+  },
+  {
+    "id": "UI-MypageMarketingMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/mypage/MypageMarketingMigrationPage.tsx",
+    "name": "MypageMarketingMigrationPage"
+  },
+  {
+    "id": "UI-EmissionLciClassificationMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/emission-lci-classification/EmissionLciClassificationMigrationPage.tsx",
+    "name": "EmissionLciClassificationMigrationPage"
+  },
+  {
+    "id": "UI-TradeAutoOrderMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/trade-auto-order/TradeAutoOrderMigrationPage.tsx",
+    "name": "TradeAutoOrderMigrationPage"
+  },
+  {
+    "id": "UI-AdminSitemapMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/admin-sitemap/AdminSitemapMigrationPage.tsx",
+    "name": "AdminSitemapMigrationPage"
+  },
+  {
+    "id": "UI-ExternalRetryMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/external-retry/ExternalRetryMigrationPage.tsx",
+    "name": "ExternalRetryMigrationPage"
+  },
+  {
+    "id": "UI-SettlementCalendarMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/settlement-calendar/SettlementCalendarMigrationPage.tsx",
+    "name": "SettlementCalendarMigrationPage"
+  },
+  {
+    "id": "UI-SensorEditMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/sensor-edit/SensorEditMigrationPage.tsx",
+    "name": "SensorEditMigrationPage"
+  },
+  {
+    "id": "UI-TradeCompleteMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/trade-complete/TradeCompleteMigrationPage.tsx",
+    "name": "TradeCompleteMigrationPage"
+  },
+  {
+    "id": "UI-WbsManagementMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/wbs-management/WbsManagementMigrationPage.tsx",
+    "name": "WbsManagementMigrationPage"
+  },
+  {
+    "id": "UI-SystemSecurityHistoryMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/security-history/SystemSecurityHistoryMigrationPage.tsx",
+    "name": "SystemSecurityHistoryMigrationPage"
+  },
+  {
+    "id": "UI-MemberSecurityHistoryMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/security-history/MemberSecurityHistoryMigrationPage.tsx",
+    "name": "MemberSecurityHistoryMigrationPage"
+  },
+  {
+    "id": "UI-SecurityHistoryMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/security-history/SecurityHistoryMigrationPage.tsx",
+    "name": "SecurityHistoryMigrationPage"
+  },
+  {
+    "id": "UI-ErrorLogMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/error-log/ErrorLogMigrationPage.tsx",
+    "name": "ErrorLogMigrationPage"
+  },
+  {
+    "id": "UI-TradeDuplicateMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/trade-duplicate/TradeDuplicateMigrationPage.tsx",
+    "name": "TradeDuplicateMigrationPage"
+  },
+  {
+    "id": "UI-ScreenBuilderMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/screen-builder/ScreenBuilderMigrationPage.tsx",
+    "name": "ScreenBuilderMigrationPage"
+  },
+  {
+    "id": "UI-ScreenRuntimeMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/screen-builder/ScreenRuntimeMigrationPage.tsx",
+    "name": "ScreenRuntimeMigrationPage"
+  },
+  {
+    "id": "UI-CurrentRuntimeCompareMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/screen-builder/CurrentRuntimeCompareMigrationPage.tsx",
+    "name": "CurrentRuntimeCompareMigrationPage"
+  },
+  {
+    "id": "UI-RepairWorkbenchMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/screen-builder/RepairWorkbenchMigrationPage.tsx",
+    "name": "RepairWorkbenchMigrationPage"
+  },
+  {
+    "id": "UI-RefundListMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/refund-list/RefundListMigrationPage.tsx",
+    "name": "RefundListMigrationPage"
+  },
+  {
+    "id": "UI-PostListMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/post-list/PostListMigrationPage.tsx",
+    "name": "PostListMigrationPage"
+  },
+  {
+    "id": "UI-CertificateRecCheckMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/certificate-rec-check/CertificateRecCheckMigrationPage.tsx",
+    "name": "CertificateRecCheckMigrationPage"
+  },
+  {
+    "id": "UI-EduMyCourseMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/edu-my-course/EduMyCourseMigrationPage.tsx",
+    "name": "EduMyCourseMigrationPage"
+  },
+  {
+    "id": "UI-DbPromotionPolicyMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/db-promotion-policy/DbPromotionPolicyMigrationPage.tsx",
+    "name": "DbPromotionPolicyMigrationPage"
+  },
+  {
+    "id": "UI-EmissionDataHistoryMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/emission-data-history/EmissionDataHistoryMigrationPage.tsx",
+    "name": "EmissionDataHistoryMigrationPage"
+  },
+  {
+    "id": "UI-CertificateReviewMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/certificate-review/CertificateReviewMigrationPage.tsx",
+    "name": "CertificateReviewMigrationPage"
+  },
+  {
+    "id": "UI-SupportFaqMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/support-faq/SupportFaqMigrationPage.tsx",
+    "name": "SupportFaqMigrationPage"
+  },
+  {
+    "id": "UI-MemberEditMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/member-edit/MemberEditMigrationPage.tsx",
+    "name": "MemberEditMigrationPage"
+  },
+  {
+    "id": "UI-SitemapMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/sitemap/SitemapMigrationPage.tsx",
+    "name": "SitemapMigrationPage"
+  },
+  {
+    "id": "UI-BannerListMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/banner-list/BannerListMigrationPage.tsx",
+    "name": "BannerListMigrationPage"
+  },
+  {
+    "id": "UI-BlocklistMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/blocklist/BlocklistMigrationPage.tsx",
+    "name": "BlocklistMigrationPage"
+  },
+  {
+    "id": "UI-AdminAccountCreateMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/admin-account-create/AdminAccountCreateMigrationPage.tsx",
+    "name": "AdminAccountCreateMigrationPage"
+  },
+  {
+    "id": "UI-CertificateReportFormMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/certificate-report-form/CertificateReportFormMigrationPage.tsx",
+    "name": "CertificateReportFormMigrationPage"
+  },
+  {
+    "id": "UI-JoinCompleteMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/join-wizard/JoinCompleteMigrationPage.tsx",
+    "name": "JoinCompleteMigrationPage"
+  },
+  {
+    "id": "UI-JoinWizardMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/join-wizard/JoinWizardMigrationPage.tsx",
+    "name": "JoinWizardMigrationPage"
+  },
+  {
+    "id": "UI-JoinTermsMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/join-wizard/JoinTermsMigrationPage.tsx",
+    "name": "JoinTermsMigrationPage"
+  },
+  {
+    "id": "UI-JoinInfoMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/join-wizard/JoinInfoMigrationPage.tsx",
+    "name": "JoinInfoMigrationPage"
+  },
+  {
+    "id": "UI-JoinAuthMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/join-wizard/JoinAuthMigrationPage.tsx",
+    "name": "JoinAuthMigrationPage"
+  },
+  {
+    "id": "UI-PaymentNotifyMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/payment-notify/PaymentNotifyMigrationPage.tsx",
+    "name": "PaymentNotifyMigrationPage"
+  },
+  {
+    "id": "UI-DownloadListMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/download-list/DownloadListMigrationPage.tsx",
+    "name": "DownloadListMigrationPage"
+  },
+  {
+    "id": "UI-InfraManagementMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/system-infra/InfraManagementMigrationPage.tsx",
+    "name": "InfraManagementMigrationPage"
+  },
+  {
+    "id": "UI-EmissionDataInputMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/emission-data-input/EmissionDataInputMigrationPage.tsx",
+    "name": "EmissionDataInputMigrationPage"
+  },
+  {
+    "id": "UI-EduCertificateMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/edu-certificate/EduCertificateMigrationPage.tsx",
+    "name": "EduCertificateMigrationPage"
+  },
+  {
+    "id": "UI-CertificateApproveMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/certificate-approve/CertificateApproveMigrationPage.tsx",
+    "name": "CertificateApproveMigrationPage"
+  },
+  {
+    "id": "UI-CompanyApproveMigrationPage",
+    "type": "UI",
+    "status": "READY",
+    "path": "frontend/src/features/company-approve/CompanyApproveMigrationPage.tsx",
+    "name": "CompanyApproveMigrationPage"
+  },
+  {
+    "id": "LOGIC-UiAssetScanProvider",
+    "type": "SERVICE",
+    "status": "ACTIVE",
+    "path": "modules/carbonet-builder-observability/src/main/java/egovframework/com/common/trace/UiAssetScanProvider.java",
+    "name": "UiAssetScanProvider"
+  },
+  {
+    "id": "LOGIC-ServiceLogicAssetScanProvider",
+    "type": "SERVICE",
+    "status": "ACTIVE",
+    "path": "modules/carbonet-builder-observability/src/main/java/egovframework/com/common/trace/ServiceLogicAssetScanProvider.java",
+    "name": "ServiceLogicAssetScanProvider"
+  },
+  {
+    "id": "LOGIC-RuntimeAssetScanProvider",
+    "type": "SERVICE",
+    "status": "ACTIVE",
+    "path": "modules/carbonet-builder-observability/src/main/java/egovframework/com/common/trace/RuntimeAssetScanProvider.java",
+    "name": "RuntimeAssetScanProvider"
+  },
+  {
+    "id": "LOGIC-AssetScanProvider",
+    "type": "SERVICE",
+    "status": "ACTIVE",
+    "path": "modules/carbonet-builder-observability/src/main/java/egovframework/com/common/trace/AssetScanProvider.java",
+    "name": "AssetScanProvider"
+  },
+  {
+    "id": "LOGIC-WebRouteAssetScanProvider",
+    "type": "SERVICE",
+    "status": "ACTIVE",
+    "path": "modules/carbonet-builder-observability/src/main/java/egovframework/com/common/trace/WebRouteAssetScanProvider.java",
+    "name": "WebRouteAssetScanProvider"
+  },
+  {
+    "id": "LOGIC-DataAssetScanProvider",
+    "type": "SERVICE",
+    "status": "ACTIVE",
+    "path": "modules/carbonet-builder-observability/src/main/java/egovframework/com/common/trace/DataAssetScanProvider.java",
+    "name": "DataAssetScanProvider"
+  },
+  {
+    "id": "SENSOR-001",
+    "type": "SENSOR",
+    "status": "OK",
+    "name": "Main Power Monitor"
+  },
+  {
+    "id": "SENSOR-002",
+    "type": "SENSOR",
+    "status": "DRIFTED",
+    "name": "HVAC Control Hub"
+  }
+]

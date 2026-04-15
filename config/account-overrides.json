@@ -1,0 +1,158 @@
+{
+  "accounts": [
+    {
+      "id": "로그인-0aa46c",
+      "email": "sjkim08315@gmail.com",
+      "accountId": "b6a7d6a0-f3b3-4d3d-8c0d-81e7fc0aa46c",
+      "accountType": "free",
+      "nextAvailableAt": "",
+      "paidPlanExpiresAt": "",
+      "manualStatus": "",
+      "manualBlockedUntil": "",
+      "notes": ""
+    },
+    {
+      "id": "로그인-10a8dc",
+      "email": "inkedmoments1234@gmail.com",
+      "accountId": "be186884-01f1-46f8-ae12-ef678b10a8dc",
+      "accountType": "paid",
+      "nextAvailableAt": "",
+      "paidPlanExpiresAt": "2026-04-14T21:20:00+09:00",
+      "manualStatus": "",
+      "manualBlockedUntil": "",
+      "notes": ""
+    },
+    {
+      "id": "로그인-163c87",
+      "email": "padam910831@gmail.com",
+      "accountId": "12a68b3c-0523-4b13-b219-bdf671163c87",
+      "accountType": "paid",
+      "nextAvailableAt": "",
+      "paidPlanExpiresAt": "2026-04-19T21:23:00+09:00",
+      "manualStatus": "",
+      "manualBlockedUntil": "",
+      "notes": ""
+    },
+    {
+      "id": "로그인-3a335a",
+      "email": "neyas2neya@gmail.com",
+      "accountId": "8b907a47-912e-4412-970d-61b2a03a335a",
+      "accountType": "free",
+      "nextAvailableAt": "",
+      "paidPlanExpiresAt": "",
+      "manualStatus": "",
+      "manualBlockedUntil": "",
+      "notes": ""
+    },
+    {
+      "id": "로그인-42c071",
+      "email": "kimhalo9696@gmail.com",
+      "accountId": "af3d0d64-8f21-4a6b-b6b2-54e35842c071",
+      "accountType": "paid",
+      "nextAvailableAt": "",
+      "paidPlanExpiresAt": "",
+      "manualStatus": "",
+      "manualBlockedUntil": "",
+      "notes": ""
+    },
+    {
+      "id": "로그인-48286b",
+      "email": "snapenglish1234@gmail.com",
+      "accountId": "31290c59-faf9-42bc-bda0-e487e048286b",
+      "accountType": "paid",
+      "nextAvailableAt": "",
+      "paidPlanExpiresAt": "2026-04-25T14:06:00+09:00",
+      "manualStatus": "",
+      "manualBlockedUntil": "",
+      "notes": ""
+    },
+    {
+      "id": "로그인-4b0ad1",
+      "email": "sjkim08311@gmail.com",
+      "accountId": "a64ab0a3-ed2a-4516-8a0c-2c91274b0ad1",
+      "accountType": "paid",
+      "nextAvailableAt": "",
+      "paidPlanExpiresAt": "",
+      "manualStatus": "",
+      "manualBlockedUntil": "",
+      "notes": ""
+    },
+    {
+      "id": "로그인-4d2c71",
+      "email": "animallog1234@gmail.com",
+      "accountId": "7fb6c63b-da53-4b06-8f62-8251564d2c71",
+      "accountType": "paid",
+      "nextAvailableAt": "",
+      "paidPlanExpiresAt": "2026-04-23T17:36:00+09:00",
+      "manualStatus": "",
+      "manualBlockedUntil": "",
+      "notes": ""
+    },
+    {
+      "id": "로그인-4e9411",
+      "email": "neyagames9696@gmail.com",
+      "accountId": "d39b7c2c-1353-4a14-af6b-197cb24e9411",
+      "accountType": "paid",
+      "nextAvailableAt": "",
+      "paidPlanExpiresAt": "",
+      "manualStatus": "",
+      "manualBlockedUntil": "",
+      "notes": ""
+    },
+    {
+      "id": "로그인-531dca",
+      "email": "smilecoin1234@gmail.com",
+      "accountId": "b5e3ebb8-7ce0-44c5-a779-67873c531dca",
+      "accountType": "paid",
+      "nextAvailableAt": "",
+      "paidPlanExpiresAt": "2026-04-19T02:21:00+09:00",
+      "manualStatus": "",
+      "manualBlockedUntil": "",
+      "notes": ""
+    },
+    {
+      "id": "로그인-8cbf48",
+      "email": "imaneya@gmail.com",
+      "accountId": "089508e9-25b4-4084-ba0b-01def18cbf48",
+      "accountType": "free",
+      "nextAvailableAt": "",
+      "paidPlanExpiresAt": "",
+      "manualStatus": "",
+      "manualBlockedUntil": "",
+      "notes": ""
+    },
+    {
+      "id": "로그인-aac677",
+      "email": "sjkim08314@gmail.com",
+      "accountId": "bfe0dad5-d80f-4558-968e-4b474caac677",
+      "accountType": "paid",
+      "nextAvailableAt": "",
+      "paidPlanExpiresAt": "",
+      "manualStatus": "",
+      "manualBlockedUntil": "",
+      "notes": ""
+    },
+    {
+      "id": "로그인-abb27d",
+      "email": "sjkim08312@gmail.com",
+      "accountId": "578d4e1b-174f-4d7b-99bc-4c289cabb27d",
+      "accountType": "paid",
+      "nextAvailableAt": "",
+      "paidPlanExpiresAt": "",
+      "manualStatus": "",
+      "manualBlockedUntil": "",
+      "notes": ""
+    },
+    {
+      "id": "로그인-b99ade",
+      "email": "neyatube31@gmail.com",
+      "accountId": "5faff9ca-2986-4b6e-9fc8-180e15b99ade",
+      "accountType": "paid",
+      "nextAvailableAt": "",
+      "paidPlanExpiresAt": "2026-04-17T20:01:00+09:00",
+      "manualStatus": "",
+      "manualBlockedUntil": "",
+      "notes": ""
+    }
+  ]
+}

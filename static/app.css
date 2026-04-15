@@ -27,6 +27,52 @@ body {
   color: var(--text);
 }
 
+.route-shell[hidden] {
+  display: none !important;
+}
+
+.password-page {
+  min-height: 100vh;
+  padding: 48px 20px;
+  display: grid;
+  place-items: center;
+  gap: 20px;
+  background:
+    radial-gradient(circle at top right, rgba(159, 59, 34, 0.16), transparent 24%),
+    linear-gradient(180deg, #fbf7f0 0%, #f3efe6 100%);
+}
+
+.password-page__hero,
+.password-card {
+  width: min(100%, 520px);
+}
+
+.password-page__hero {
+  text-align: left;
+}
+
+.password-page__hero h1 {
+  margin: 0 0 10px;
+  font-size: clamp(30px, 4vw, 42px);
+  line-height: 1.08;
+}
+
+.password-card {
+  background: rgba(255, 253, 248, 0.96);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  padding: 24px;
+  display: grid;
+  gap: 16px;
+}
+
+.password-hints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 button,
 input,
 textarea,
@@ -57,6 +103,7 @@ select {
   flex-direction: column;
   gap: 18px;
   min-width: 0;
+  min-height: 100vh;
 }
 
 .brand h1,
@@ -107,6 +154,12 @@ select {
   align-items: center;
   gap: 12px;
   margin-bottom: 14px;
+}
+
+.panel-section {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .compact-head {
@@ -165,11 +218,20 @@ select {
   border-radius: 20px;
   background: rgba(255, 253, 248, 0.94);
   box-shadow: var(--shadow);
+  position: sticky;
+  top: 16px;
+  z-index: 4;
+  backdrop-filter: blur(10px);
 }
 
 [data-sidebar-tab-panel],
 [data-main-tab-panel] {
   min-width: 0;
+}
+
+[data-sidebar-tab-panel][hidden],
+[data-main-tab-panel][hidden] {
+  display: none !important;
 }
 
 .status-bar {
@@ -188,6 +250,29 @@ select {
   gap: 8px;
   align-items: center;
   min-width: 180px;
+}
+
+.toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fffaf4;
+}
+
+.toggle-row strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.toggle-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  flex: 0 0 auto;
 }
 
 .workspace-list,
@@ -718,6 +803,31 @@ select {
   margin-bottom: 10px;
 }
 
+.inline-check-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.inline-check-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #fffaf4;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.inline-check-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
 label {
   font-size: 13px;
   font-weight: 700;
@@ -785,6 +895,14 @@ textarea {
   color: var(--text);
 }
 
+.success-text {
+  color: var(--success);
+}
+
+.danger-text {
+  color: var(--danger);
+}
+
 .panel-head-actions {
   display: flex;
   align-items: center;
@@ -832,12 +950,47 @@ code {
   }
 }
 
+.card-with-action {
+  position: relative;
+}
+
+.card-delete-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(176, 78, 69, 0.35);
+  border-radius: 999px;
+  background: rgba(44, 26, 24, 0.92);
+  color: #f6d8d1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.card-delete-button:hover {
+  background: rgba(98, 38, 33, 0.96);
+}
+
+.danger-button {
+  border-color: rgba(176, 78, 69, 0.45);
+  color: #f6d8d1;
+}
+
 .account-card-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 8px;
   min-width: 0;
+}
+
+.current-account-pills {
+  margin-top: 10px;
 }
 
 #login-help {
@@ -881,6 +1034,109 @@ code {
   min-height: 120px;
 }
 
+.compact-console {
+  min-height: 180px;
+  max-height: 320px;
+}
+
+.parallel-output-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.parallel-output-layout section {
+  min-width: 0;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(41, 32, 24, 0.78);
+  border: 1px solid rgba(114, 86, 58, 0.38);
+}
+
+.parallel-output-layout h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+}
+
+.parallel-timeline,
+.parallel-workers,
+.parallel-failover {
+  display: grid;
+  gap: 8px;
+}
+
+.live-log {
+  min-height: 180px;
+  max-height: 360px;
+  overflow: auto;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(21, 18, 15, 0.96);
+  border: 1px solid rgba(114, 86, 58, 0.32);
+}
+
+.live-log-row {
+  padding: 9px 11px;
+  border-radius: 12px;
+  background: rgba(31, 26, 21, 0.92);
+  color: #f5efe7;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  border-left: 3px solid #8c7255;
+}
+
+.live-log-row.success {
+  border-left-color: var(--success);
+}
+
+.live-log-row.failed {
+  border-left-color: var(--danger);
+}
+
+.live-log-row.running {
+  border-left-color: #f4c95d;
+}
+
+.parallel-event,
+.parallel-worker,
+.parallel-failover-row {
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(28, 22, 18, 0.88);
+  color: #f5efe7;
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.parallel-event strong,
+.parallel-worker strong,
+.parallel-failover-row strong {
+  display: block;
+  color: #f5d9c1;
+  font-size: 12px;
+  margin-bottom: 3px;
+}
+
+.parallel-worker.ready,
+.parallel-event.success {
+  border-left: 3px solid var(--success);
+}
+
+.parallel-worker.failed,
+.parallel-event.failed {
+  border-left: 3px solid var(--danger);
+}
+
+.parallel-worker.running,
+.parallel-event.running {
+  border-left: 3px solid #f4c95d;
+}
+
 .pill {
   display: inline-flex;
   align-items: center;
@@ -893,8 +1149,17 @@ code {
   color: var(--muted);
 }
 
+.pill .ghost-button {
+  padding: 2px 6px;
+  min-height: 0;
+}
+
 .pill.success {
   color: var(--success);
+}
+
+.pill.warning {
+  color: #f4c95d;
 }
 
 .pill.danger {
@@ -902,6 +1167,10 @@ code {
 }
 
 @media (max-width: 1100px) {
+  .parallel-output-layout {
+    grid-template-columns: 1fr;
+  }
+
   .app-shell {
     grid-template-columns: 1fr;
   }
@@ -917,5 +1186,13 @@ code {
   .sidebar {
     border-right: 0;
     border-bottom: 1px solid var(--border);
+  }
+
+  .password-page {
+    padding: 32px 16px;
+  }
+
+  .password-card {
+    padding: 20px;
   }
 }

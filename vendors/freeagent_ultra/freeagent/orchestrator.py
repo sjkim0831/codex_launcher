@@ -1,12 +1,14 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import time
+import uuid
 from pathlib import Path
+from typing import Any
 
 from rich.console import Console
 from rich.panel import Panel
 
-from freeagent.models import ApplyResult, AskResult, ExplainResult, Plan, PlanStep
+from freeagent.models import ApplyResult, AskResult, ExplainResult, GraphRunResult, Plan, PlanStep
 from freeagent.patch_engine import build_patch, patch_file
 from freeagent.provider_manager import ProviderManager
 from freeagent.safety import classify_risk_for_command, protected_path
@@ -28,12 +30,42 @@ class Orchestrator:
     def inspect(self):
         return summarize_project(".")
 
+    def run_graph(self, goal: str) -> GraphRunResult:
+        from freeagent.graph.builder import build_graph
+
+        graph = build_graph()
+        state = {
+            "user_input": goal,
+            "task_plan": [],
+            "current_task": None,
+            "research_data": "",
+            "code_result": None,
+            "final_answer": None,
+            "memory": {},
+            "next": None,
+            "history": [],
+            "assets": [],
+            "asset_audit": None,
+            "inventory_result": None,
+        }
+        config = {"configurable": {"thread_id": str(uuid.uuid4())}}
+        final_state = graph.invoke(state, config=config)
+        return GraphRunResult(
+            final_answer=final_state.get("final_answer") or "",
+            state=final_state,
+            details={
+                "next": final_state.get("next"),
+                "task_plan_remaining": final_state.get("task_plan") or [],
+                "asset_total": (final_state.get("asset_audit") or {}).get("total"),
+            },
+        )
+
     def explain(self, targets: list[str] | None = None, symbol: str | None = None) -> ExplainResult:
         if targets:
             p = targets[0]
             text = read_file(p)
             clean_text = text.lstrip("\ufeff")
-            prompt = f"Explain file briefly: {p}\\n\\n{clean_text[:1800]}"
+            prompt = f"Explain file briefly: {p}\n\n{clean_text[:1800]}"
             resp, provider = self.providers.generate(prompt)
             return ExplainResult(
                 path=p,
@@ -48,7 +80,7 @@ class Orchestrator:
                 except Exception:
                     continue
                 if symbol in text:
-                    prompt = f"Explain symbol {symbol} in file {f}\\n\\n{text[:1800]}"
+                    prompt = f"Explain symbol {symbol} in file {f}\n\n{text[:1800]}"
                     resp, provider = self.providers.generate(prompt)
                     return ExplainResult(path=f, symbol=symbol, summary=resp, details={"provider": provider})
         return ExplainResult(path=None, symbol=symbol, summary="No matching target or symbol found.")
@@ -188,7 +220,7 @@ class Orchestrator:
         lines.append("Verify:")
         for v in plan.verify_plan:
             lines.append(f"- {v}")
-        console.print(Panel("\\n".join(lines), title="PLAN"))
+        console.print(Panel("\n".join(lines), title="PLAN"))
 
     def _run_verify(self, session: Session, commands: list[str], yes: bool = False):
         for cmd in commands:
@@ -267,7 +299,7 @@ class Orchestrator:
                     self.store.append_log(session, "read_failed", {"path": path, "error": str(e)})
                     continue
 
-                prompt = f"Goal: {current_goal}\\nFile: {path}\\nPreview:\\n{before[:1800]}"
+                prompt = f"Goal: {current_goal}\nFile: {path}\nPreview:\n{before[:1800]}"
                 resp, provider = self.providers.generate(prompt)
                 after = patch_file(path, before, current_goal, resp)
                 patch = build_patch(path, before, after)
@@ -304,7 +336,7 @@ class Orchestrator:
                     session_id=session.id,
                 )
 
-            analysis = inspect_errors((test_res.stderr or "") + "\\n" + (test_res.stdout or ""))
+            analysis = inspect_errors((test_res.stderr or "") + "\n" + (test_res.stdout or ""))
             self.store.append_log(session, "verify_failed_analysis", {"attempt": attempt, "analysis": analysis})
 
             if attempt > max_retries:
@@ -326,7 +358,7 @@ class Orchestrator:
                 )
 
             current_goal = (
-                f"{goal}\\nRetry Fix Context:\\n{analysis.get('summary')}\\n"
+                f"{goal}\nRetry Fix Context:\n{analysis.get('summary')}\n"
                 f"Hints: {', '.join(analysis.get('hints', []))}"
             )
             self.store.append_log(session, "retry_goal_refined", {"attempt": attempt + 1, "goal": current_goal})

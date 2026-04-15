@@ -10,6 +10,15 @@ freeagent/patch_engine.py
 freeagent/provider_manager.py
 freeagent/safety.py
 freeagent/session.py
+freeagent/graph/builder.py
+freeagent/graph/state.py
+freeagent/graph/nodes/asset_manager.py
+freeagent/graph/nodes/coder.py
+freeagent/graph/nodes/executor.py
+freeagent/graph/nodes/memory.py
+freeagent/graph/nodes/planner.py
+freeagent/graph/nodes/researcher.py
+freeagent/graph/nodes/router.py
 freeagent/providers/base.py
 freeagent/providers/minimax_provider.py
 freeagent/providers/mock_provider.py
@@ -17,6 +26,7 @@ freeagent/providers/ollama_provider.py
 freeagent/providers/openai_compatible.py
 freeagent/tools/__init__.py
 freeagent/tools/approval.py
+freeagent/tools/asset_tools.py
 freeagent/tools/file_tools.py
 freeagent/tools/git_tools.py
 freeagent/tools/inspect_tools.py

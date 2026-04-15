@@ -7,6 +7,45 @@
     <link rel="stylesheet" href="/static/app.css">
   </head>
   <body>
+    <section id="password-route-shell" class="route-shell" hidden>
+      <div class="password-page">
+        <div class="password-page__hero">
+          <p class="eyebrow">My Page</p>
+          <h1>비밀번호 변경</h1>
+          <p class="muted">현재 비밀번호를 확인한 뒤 새 비밀번호로 변경합니다.</p>
+        </div>
+
+        <form id="password-route-form" class="password-card">
+          <div class="field-row">
+            <label for="password-current">현재 비밀번호</label>
+            <input id="password-current" name="currentPassword" type="password" autocomplete="current-password" placeholder="현재 비밀번호 입력">
+          </div>
+
+          <div class="field-row">
+            <label for="password-next">새 비밀번호</label>
+            <input id="password-next" name="nextPassword" type="password" autocomplete="new-password" placeholder="새 비밀번호 입력">
+          </div>
+
+          <div class="field-row">
+            <label for="password-confirm">새 비밀번호 확인</label>
+            <input id="password-confirm" name="confirmPassword" type="password" autocomplete="new-password" placeholder="새 비밀번호 다시 입력">
+          </div>
+
+          <div class="password-hints">
+            <span class="pill">영문, 숫자, 특수문자 조합 권장</span>
+            <span class="pill">8자 이상 권장</span>
+          </div>
+
+          <div class="button-row button-row-uniform">
+            <button class="primary-button" type="submit">비밀번호 변경</button>
+            <button id="password-route-reset" class="ghost-button" type="button">초기화</button>
+          </div>
+
+          <p id="password-route-message" class="muted inline-note">화면 연결만 우선 적용되었습니다. 실제 저장 처리는 아직 연결되지 않았습니다.</p>
+        </form>
+      </div>
+    </section>
+
     <div class="app-shell">
       <aside class="sidebar">
         <div class="brand">
@@ -41,6 +80,8 @@
           <div class="button-row">
             <button id="create-session" class="secondary-button" type="button">Create</button>
             <button id="branch-session" class="ghost-button" type="button">Branch Current</button>
+            <button id="delete-session" class="ghost-button" type="button">Delete Current</button>
+            <button id="open-new-instance" class="ghost-button" type="button">New Work Window</button>
           </div>
           <div id="current-session" class="muted"></div>
           <div class="field-row compact">
@@ -109,15 +150,51 @@
             <button id="start-login" class="secondary-button" type="button">Login</button>
             <button id="logout-login" class="ghost-button" type="button">Logout</button>
           </div>
-          <div id="login-help" class="muted">Login은 device code를 발급하고 인증 페이지를 새 창으로 엽니다.</div>
+          <div id="login-help" class="muted">Login은 현재 work window 기준 device code를 발급합니다. 저장된 슬롯은 작업 종류에 따라 자동 선택되며, 필요하면 여기서 수동으로 바꿔둘 수 있습니다.</div>
           <div id="current-account" class="muted"></div>
           <div id="account-list" class="workspace-list"></div>
+          <div class="panel-section">
+            <div class="panel-head compact-head">
+              <h3>계정 관리</h3>
+              <span id="account-editor-title" class="muted">선택된 계정 없음</span>
+            </div>
+            <div class="field-row compact">
+              <label for="account-editor-status">수동 상태</label>
+              <select id="account-editor-status">
+                <option value="">자동</option>
+                <option value="ready">ready</option>
+                <option value="quota_wait">quota_wait</option>
+                <option value="open_pending">open_pending</option>
+                                <option value="unauthorized">unauthorized</option>
+                <option value="login_expired">login_expired</option>
+              </select>
+            </div>
+            <div class="field-row compact">
+              <label for="account-editor-next-available">재사용 가능 시각</label>
+              <input id="account-editor-next-available" type="datetime-local">
+            </div>
+            <div class="field-row compact">
+              <label for="account-editor-note">관리 메모</label>
+              <input id="account-editor-note" type="text" placeholder="예: 4시간 후 재시도, 백업 슬롯">
+            </div>
+            <div class="button-row">
+              <button id="account-editor-apply-suggested" class="ghost-button" type="button">추정값 적용</button>
+              <button id="account-editor-apply-token-exp" class="ghost-button" type="button">토큰 exp 적용</button>
+              <button id="save-account-settings" class="secondary-button" type="button">저장</button>
+              <button id="clear-account-settings" class="ghost-button" type="button">초기화</button>
+            </div>
+            <p id="account-editor-suggestion" class="muted inline-note">쿼터/만료 메시지에서 추정한 재사용 가능 시각이 있으면 여기서 바로 적용할 수 있습니다.</p>
+          </div>
         </section>
 
         <section class="panel" data-sidebar-tab-panel="jobs">
           <div class="panel-head">
             <h2>Jobs</h2>
-            <button id="refresh-jobs" class="ghost-button" type="button">Refresh</button>
+            <div class="button-row">
+              <button id="recover-jobs" class="ghost-button" type="button">Recover</button>
+              <button id="refresh-jobs" class="ghost-button" type="button">Refresh</button>
+              <button id="clear-all-jobs" class="ghost-button danger-button" type="button">모두 삭제</button>
+            </div>
           </div>
           <div id="job-filter-bar" class="job-filter-bar is-collapsed">
             <span id="job-filter-text" class="muted"></span>
@@ -156,6 +233,10 @@
             <div class="status-pill">
               <span>Login</span>
               <strong id="login-status">checking...</strong>
+            </div>
+            <div class="status-pill">
+              <span>Instance</span>
+              <strong id="instance-label">default</strong>
             </div>
             <div class="status-pill">
               <span>Runtime</span>
@@ -263,6 +344,34 @@
         <section class="project-grid" data-main-tab-panel="project">
           <div class="panel project-panel">
             <div class="panel-head">
+              <h2>Project Assembly</h2>
+              <span id="project-assembly-status" class="muted">공통 adapter + project binding 프로필</span>
+            </div>
+            <div class="field-row compact">
+              <label for="project-assembly-select">Managed Projects</label>
+              <select id="project-assembly-select"></select>
+            </div>
+            <div class="root-register-grid">
+              <input id="project-assembly-id" type="text" placeholder="project id 예: carbonet">
+              <input id="project-assembly-label" type="text" placeholder="프로젝트 라벨">
+            </div>
+            <div class="root-register-grid">
+              <input id="project-assembly-adapter" type="text" placeholder="project adapter 예: screenbuilder-carbonet-adapter">
+              <input id="project-assembly-common-adapter" type="text" placeholder="common adapter 예: screenbuilder-runtime-common-adapter">
+            </div>
+            <div class="root-register-grid">
+              <input id="project-assembly-app-module" type="text" placeholder="app module 예: apps/carbonet-app">
+              <input id="project-assembly-port" type="number" min="1" placeholder="runtime port 예: 18000">
+            </div>
+            <div class="button-row button-row-uniform">
+              <button id="project-assembly-register" class="secondary-button" type="button">Register Selected</button>
+              <button id="project-assembly-refresh" class="ghost-button" type="button">Refresh</button>
+            </div>
+            <pre id="project-assembly-preview" class="theme-tree">프로젝트를 선택하면 common jar, project module, adapter binding 요약을 표시합니다.</pre>
+          </div>
+
+          <div class="panel project-panel">
+            <div class="panel-head">
               <h2>Project Folder</h2>
               <span id="project-root" class="muted"></span>
             </div>
@@ -300,14 +409,33 @@
             </div>
             <div class="project-action-grid">
               <button id="project-one-click" class="primary-button project-one-click" type="button">One Click Build + Restart</button>
+              <button id="project-build-all" class="primary-button project-one-click" type="button">Build Common + Project</button>
+              <button id="project-build-common" class="secondary-button" type="button">Build Common Jars</button>
+              <button id="project-install-common" class="secondary-button" type="button">Install Common Jars</button>
+              <button id="project-build-app" class="secondary-button" type="button">Build Project App</button>
               <button id="project-build-frontend" class="secondary-button" type="button">Frontend Build</button>
               <button id="project-package-backend" class="secondary-button" type="button">Backend Package</button>
               <button id="project-restart-18000" class="ghost-button" type="button">Restart 18000</button>
+            </div>
+            <div class="panel-section">
+              <div class="panel-head compact-head">
+                <h3>Project Runtime Control</h3>
+                <button id="project-runtime-status-refresh" class="ghost-button" type="button">Status</button>
+              </div>
+              <p id="project-runtime-status" class="muted inline-note">프로젝트를 선택하면 runtime profile과 health를 확인합니다.</p>
+              <div class="project-action-grid project-action-grid-secondary">
+                <button id="project-runtime-start" class="secondary-button" type="button">Runtime Start</button>
+                <button id="project-runtime-stop" class="ghost-button" type="button">Runtime Stop</button>
+                <button id="project-runtime-restart" class="secondary-button" type="button">Runtime Restart</button>
+                <button id="project-runtime-verify" class="ghost-button" type="button">Runtime Verify</button>
+              </div>
             </div>
             <div class="project-action-grid project-action-grid-secondary">
               <button id="project-backup-sql" class="secondary-button" type="button">SQL Backup</button>
               <button id="project-backup-physical" class="secondary-button" type="button">Physical Backup</button>
               <button id="project-backup-status" class="ghost-button" type="button">Backup Status</button>
+              <button id="project-traffic-status" class="secondary-button" type="button">Traffic Status</button>
+              <button id="project-traffic-tail" class="ghost-button" type="button">Traffic Tail</button>
             </div>
             <div class="project-action-help muted">
               백업은 `/opt/util/cubrid/11.2/scripts` 기준 스크립트를 실행합니다. 프로젝트를 선택한 뒤 버튼으로 바로 실행하고 결과는 Jobs와 Raw Output에서 확인합니다.
@@ -351,6 +479,55 @@
               <span id="selected-action-caption" class="muted">버튼을 선택하세요</span>
             </div>
             <div id="action-grid" class="action-grid"></div>
+            <div class="panel-section">
+              <div class="panel-head compact-head">
+                <h3>작업 자동 연결</h3>
+                <span id="action-routing-title" class="muted">선택된 액션 없음</span>
+              </div>
+              <div class="field-row compact">
+                <label for="action-routing-account">고정 계정</label>
+                <select id="action-routing-account"></select>
+              </div>
+              <div class="field-row compact">
+                <label for="action-routing-chain">계정 우선순위 체인</label>
+                <input id="action-routing-chain" type="text" placeholder="예: main,backup-1,backup-2">
+                <div class="button-row">
+                  <button id="action-routing-chain-add-selected" class="ghost-button" type="button">현재 선택 계정 추가</button>
+                  <button id="action-routing-chain-add-fixed" class="ghost-button" type="button">고정 계정 추가</button>
+                  <button id="action-routing-chain-clear" class="ghost-button" type="button">체인 비우기</button>
+                </div>
+              </div>
+              <div class="field-row compact">
+                <label for="action-routing-account-type">계정 우선순위</label>
+                <select id="action-routing-account-type">
+                  <option value="">자동</option>
+                  <option value="paid">slot-a</option>
+                  <option value="free">slot-b</option>
+                </select>
+              </div>
+              <div class="field-row compact">
+                <label for="action-routing-preset">토큰 프리셋</label>
+                <select id="action-routing-preset">
+                  <option value="">자동</option>
+                  <option value="saver">Saver</option>
+                  <option value="question">Question</option>
+                  <option value="summary">Summary</option>
+                  <option value="migration">Migration</option>
+                  <option value="implementation">Implementation</option>
+                  <option value="review">Review</option>
+                  <option value="debug">Debug</option>
+                  <option value="lite">Lite</option>
+                  <option value="balanced">Balanced</option>
+                  <option value="full">Full</option>
+                </select>
+              </div>
+              <div class="button-row">
+                <button id="save-action-routing" class="secondary-button" type="button">작업 매핑 저장</button>
+                <button id="clear-action-routing" class="ghost-button" type="button">자동 복원</button>
+              </div>
+              <p id="action-routing-note" class="muted inline-note">Quick Action별로 계정 슬롯과 토큰 절약 프리셋을 고정할 수 있습니다.</p>
+              <div id="action-routing-chain-preview" class="account-card-meta"></div>
+            </div>
           </div>
 
           <div class="panel composer-panel">
@@ -371,8 +548,14 @@
                 <option value="plan">plan</option>
                 <option value="ask">ask</option>
                 <option value="explain">explain</option>
+                <option value="graph">graph</option>
                 <option value="apply">apply</option>
               </select>
+            </div>
+
+            <div class="field-row" id="freeagent-model-row">
+              <label for="freeagent-model-input">FreeAgent Model</label>
+              <select id="freeagent-model-input"></select>
             </div>
 
             <div class="field-row" id="freeagent-targets-row">
@@ -388,6 +571,367 @@
             <div class="field-row">
               <label for="custom-codex-prompt">AI Prompt</label>
               <textarea id="custom-codex-prompt" placeholder="실행할 Codex 또는 FreeAgent 프롬프트를 입력하세요"></textarea>
+            </div>
+
+            <label class="toggle-row" for="prompt-compaction-toggle">
+              <span>
+                <strong>Prompt 압축</strong>
+                <span class="muted">브라우저 캡처, reference HTML, 메뉴 경로를 짧게 넣습니다.</span>
+              </span>
+              <input id="prompt-compaction-toggle" type="checkbox" checked>
+            </label>
+
+            <label class="toggle-row" for="classic-mode-toggle">
+              <span>
+                <strong>Classic Mode</strong>
+                <span class="muted">자동 계정, 자동 토큰 절약, 세션 문맥을 끄고 원문 prompt 위주로 실행합니다.</span>
+              </span>
+              <input id="classic-mode-toggle" type="checkbox">
+            </label>
+
+            <label class="toggle-row" for="parallel-accounts-toggle">
+              <span>
+                <strong>계정 병렬 실행</strong>
+                <span class="muted">작업 전 계정 상태를 점검하고, 사용 가능한 계정만 격리된 런타임으로 병렬 scout 후 최적 계정이 최종 실행합니다.</span>
+              </span>
+              <input id="parallel-accounts-toggle" type="checkbox">
+            </label>
+
+            <div class="panel-section">
+              <div class="panel-head compact-head">
+                <h3>모델 라우팅</h3>
+                <span class="muted">1.5B, 3B, 7B, Codex를 작업 난이도에 맞게 자동 선택합니다.</span>
+              </div>
+
+              <label class="toggle-row" for="model-routing-enabled-toggle">
+                <span>
+                  <strong>자동 모델 라우팅</strong>
+                  <span class="muted">runtime preset과 작업 성격을 기준으로 모델을 고릅니다.</span>
+                </span>
+                <input id="model-routing-enabled-toggle" type="checkbox" checked>
+              </label>
+
+              <label class="toggle-row" for="single-local-model-toggle">
+                <span>
+                  <strong>단일 로컬 모델 메모리 안전 모드</strong>
+                  <span class="muted">다른 로컬 모델 실행 전 이전 Ollama 모델을 내려 메모리 충돌을 줄입니다.</span>
+                </span>
+                <input id="single-local-model-toggle" type="checkbox" checked>
+              </label>
+
+              <label class="toggle-row" for="hard-task-codex-toggle">
+                <span>
+                  <strong>어려운 작업 Codex 승급</strong>
+                  <span class="muted">review, debug, full 계열 작업은 Codex로 자동 올립니다.</span>
+                </span>
+                <input id="hard-task-codex-toggle" type="checkbox" checked>
+              </label>
+
+              <label class="toggle-row" for="parallel-local-workers-toggle">
+                <span>
+                  <strong>병렬 로컬 워커 예약</strong>
+                  <span class="muted">단순 작업은 설치된 로컬 모델로 분할하고, 준비 안 된 모델은 자동 제외합니다.</span>
+                </span>
+                <input id="parallel-local-workers-toggle" type="checkbox" checked>
+              </label>
+
+              <div class="field-row compact">
+                <label for="parallel-local-workers-count">로컬 워커 수</label>
+                <select id="parallel-local-workers-count">
+                  <option value="1">1 worker</option>
+                  <option value="2">2 workers</option>
+                  <option value="3" selected>3 workers</option>
+                  <option value="4">4 workers</option>
+                </select>
+              </div>
+
+              <div class="field-row compact">
+                <label>병렬 로컬 모델 선택</label>
+                <div class="inline-check-list">
+                  <label class="inline-check-item" for="parallel-local-model-15b"><input id="parallel-local-model-15b" type="checkbox" checked>qwen2.5-coder:1.5b</label>
+                  <label class="inline-check-item" for="parallel-local-model-3b"><input id="parallel-local-model-3b" type="checkbox" checked>qwen2.5-coder:3b</label>
+                  <label class="inline-check-item" for="parallel-local-model-7b"><input id="parallel-local-model-7b" type="checkbox" checked>qwen2.5-coder:7b</label>
+                </div>
+              </div>
+
+              <label class="toggle-row" for="parallel-local-keep-loaded-toggle">
+                <span>
+                  <strong>병렬 로컬 모델 로드 유지</strong>
+                  <span class="muted">병렬 작업 시작 전에 선택한 로컬 모델을 미리 올리고 keep-alive를 걸어 재로딩 지연을 줄입니다.</span>
+                </span>
+                <input id="parallel-local-keep-loaded-toggle" type="checkbox">
+              </label>
+
+              <label class="toggle-row" for="parallel-local-all-loaded-required-toggle">
+                <span>
+                  <strong>전체 로드 필수</strong>
+                  <span class="muted">선택한 로컬 모델이 모두 메모리에 올라와 있을 때만 병렬 로컬 실행을 허용합니다.</span>
+                </span>
+                <input id="parallel-local-all-loaded-required-toggle" type="checkbox">
+              </label>
+
+              <div class="field-row compact">
+                <label>로컬 모델 프리로드</label>
+                <div class="button-row">
+                  <button id="parallel-local-preload-now" class="ghost-button" type="button">Preload Now</button>
+                  <button id="parallel-local-retry-missing" class="ghost-button" type="button">Retry Missing Only</button>
+                  <button id="parallel-local-unload-selected" class="ghost-button" type="button">Unload Selected</button>
+                  <button id="parallel-local-refresh-status" class="ghost-button" type="button">Refresh Status</button>
+                </div>
+              </div>
+
+              <div class="field-row compact">
+                <label for="parallel-local-keepalive-select">keep_alive</label>
+                <select id="parallel-local-keepalive-select">
+                  <option value="30m">30m</option>
+                  <option value="2h">2h</option>
+                  <option value="6h">6h</option>
+                  <option value="24h" selected>24h</option>
+                </select>
+              </div>
+
+              <label class="toggle-row" for="parallel-local-auto-keep-warm-toggle">
+                <span>
+                  <strong>Auto Keep Warm</strong>
+                  <span class="muted">선택 모델이 메모리에서 내려가면 주기적으로 다시 preload합니다.</span>
+                </span>
+                <input id="parallel-local-auto-keep-warm-toggle" type="checkbox">
+              </label>
+
+              <div class="field-row compact">
+                <label for="parallel-local-warm-interval-select">Warm 주기</label>
+                <select id="parallel-local-warm-interval-select">
+                  <option value="15000">15s</option>
+                  <option value="30000" selected>30s</option>
+                  <option value="60000">60s</option>
+                  <option value="120000">120s</option>
+                </select>
+              </div>
+
+              <div class="field-row compact">
+                <label>Loaded Models</label>
+                <div id="parallel-local-loaded-status" class="muted">상태를 아직 불러오지 않았습니다.</div>
+              </div>
+
+              <div class="field-row compact">
+                <label>최근 프리로드 결과</label>
+                <div id="parallel-local-last-result" class="muted">기록 없음</div>
+              </div>
+
+              <div class="field-row compact">
+                <label for="parallel-account-max">Codex 계정 max</label>
+                <select id="parallel-account-max">
+                  <option value="1">1 account</option>
+                  <option value="2">2 accounts</option>
+                  <option value="3">3 accounts</option>
+                  <option value="4">4 accounts</option>
+                  <option value="5">5 accounts</option>
+                  <option value="6">6 accounts</option>
+                  <option value="7">7 accounts</option>
+                  <option value="8">8 accounts</option>
+                  <option value="9">9 accounts</option>
+                  <option value="10">10 accounts</option>
+                  <option value="11">11 accounts</option>
+                  <option value="12">12 accounts</option>
+                  <option value="13">13 accounts</option>
+                  <option value="14" selected>14 accounts</option>
+                </select>
+              </div>
+
+              <div class="field-row compact">
+                <label for="parallel-local-final-synthesizer">최종 합성</label>
+                <select id="parallel-local-final-synthesizer">
+                  <option value="off">합성 안 함</option>
+                  <option value="ready-first">준비된 첫 로컬 모델</option>
+                  <option value="local-7b">7B 로컬 모델</option>
+                  <option value="codex" selected>Codex</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="panel-section">
+              <div class="panel-head compact-head">
+                <h3>토큰 절약 옵션</h3>
+                <span class="muted">작업 종류에 따라 자동 프리셋이 적용되고 Preview에서 최종 반영값을 확인할 수 있습니다.</span>
+              </div>
+
+              <div class="field-row compact">
+                <label for="runtime-preset-select">토큰 프리셋</label>
+                <select id="runtime-preset-select">
+                  <option value="auto">Auto</option>
+                  <option value="saver">Saver</option>
+                  <option value="question">Question</option>
+                  <option value="summary">Summary</option>
+                  <option value="migration">Migration</option>
+                  <option value="implementation">Implementation</option>
+                  <option value="review">Review</option>
+                  <option value="debug">Debug</option>
+                  <option value="balanced">Balanced</option>
+                  <option value="lite">Lite</option>
+                  <option value="full">Full</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
+
+              <div class="field-row compact">
+                <label for="runtime-focus-scope">작업 범위 힌트</label>
+                <input id="runtime-focus-scope" type="text" placeholder="예: /admin/emission/management 또는 src/admin/emission/*">
+                <div class="button-row">
+                  <button id="runtime-focus-from-browser" class="ghost-button" type="button">현재 브라우저 경로 사용</button>
+                  <button id="runtime-focus-from-menu" class="ghost-button" type="button">선택 메뉴 경로 사용</button>
+                  <button id="runtime-focus-clear" class="ghost-button" type="button">범위 초기화</button>
+                </div>
+              </div>
+
+              <div class="field-row compact">
+                <label for="runtime-session-context-limit">세션 컨텍스트 예산</label>
+                <select id="runtime-session-context-limit">
+                  <option value="0">자동</option>
+                  <option value="80">80 chars</option>
+                  <option value="120">120 chars</option>
+                  <option value="180">180 chars</option>
+                  <option value="240">240 chars</option>
+                  <option value="320">320 chars</option>
+                  <option value="480">480 chars</option>
+                  <option value="800">800 chars</option>
+                  <option value="1200">1200 chars</option>
+                </select>
+              </div>
+
+              <div class="field-row compact">
+                <label for="runtime-prompt-chars-limit">사용자 prompt 상한</label>
+                <select id="runtime-prompt-chars-limit">
+                  <option value="0">제한 없음</option>
+                  <option value="600">600 chars</option>
+                  <option value="800">800 chars</option>
+                  <option value="1200">1200 chars</option>
+                  <option value="1600">1600 chars</option>
+                  <option value="1800">1800 chars</option>
+                  <option value="2200">2200 chars</option>
+                  <option value="2400">2400 chars</option>
+                  <option value="4000">4000 chars</option>
+                </select>
+              </div>
+
+              <label class="toggle-row" for="runtime-browser-context-toggle">
+                <span>
+                  <strong>브라우저 문맥 포함</strong>
+                  <span class="muted">최근 캡처 HTML/Text와 대상 URL을 prompt에 넣습니다.</span>
+                </span>
+                <input id="runtime-browser-context-toggle" type="checkbox" checked>
+              </label>
+
+              <label class="toggle-row" for="runtime-reference-context-toggle">
+                <span>
+                  <strong>reference 문맥 포함</strong>
+                  <span class="muted">선택한 reference HTML/asset 내용을 prompt에 넣습니다.</span>
+                </span>
+                <input id="runtime-reference-context-toggle" type="checkbox" checked>
+              </label>
+
+              <label class="toggle-row" for="runtime-menu-context-toggle">
+                <span>
+                  <strong>메뉴 문맥 포함</strong>
+                  <span class="muted">선택한 프로젝트 메뉴 라벨과 경로를 prompt에 넣습니다.</span>
+                </span>
+                <input id="runtime-menu-context-toggle" type="checkbox" checked>
+              </label>
+
+              <label class="toggle-row" for="runtime-question-saver-toggle">
+                <span>
+                  <strong>질문형 자동 절약</strong>
+                  <span class="muted">질문으로 판단되면 세션/탐색/문맥을 더 줄여서 실행합니다.</span>
+                </span>
+                <input id="runtime-question-saver-toggle" type="checkbox" checked>
+              </label>
+
+              <label class="toggle-row" for="runtime-compact-preamble-toggle">
+                <span>
+                  <strong>지시 프리앰블 최소화</strong>
+                  <span class="muted">실행 전 붙는 preference 안내 문구를 짧게 유지합니다.</span>
+                </span>
+                <input id="runtime-compact-preamble-toggle" type="checkbox">
+              </label>
+
+              <label class="toggle-row" for="runtime-omit-preamble-toggle">
+                <span>
+                  <strong>지시 프리앰블 생략</strong>
+                  <span class="muted">preference 안내 블록 자체를 붙이지 않습니다.</span>
+                </span>
+                <input id="runtime-omit-preamble-toggle" type="checkbox">
+              </label>
+
+              <label class="toggle-row" for="runtime-whitespace-compact-toggle">
+                <span>
+                  <strong>본문 공백 압축</strong>
+                  <span class="muted">연속 빈 줄과 줄 끝 공백을 줄여서 prompt 본문을 압축합니다.</span>
+                </span>
+                <input id="runtime-whitespace-compact-toggle" type="checkbox" checked>
+              </label>
+
+              <label class="toggle-row" for="runtime-dedupe-lines-toggle">
+                <span>
+                  <strong>연속 중복 줄 제거</strong>
+                  <span class="muted">같은 줄이 연속으로 반복되면 하나만 남깁니다.</span>
+                </span>
+                <input id="runtime-dedupe-lines-toggle" type="checkbox" checked>
+              </label>
+
+              <label class="toggle-row" for="runtime-strip-fences-toggle">
+                <span>
+                  <strong>코드펜스 제거</strong>
+                  <span class="muted">본문의 ``` 펜스 줄만 제거하고 내부 내용은 유지합니다.</span>
+                </span>
+                <input id="runtime-strip-fences-toggle" type="checkbox">
+              </label>
+
+              <label class="toggle-row" for="runtime-session-context-toggle">
+                <span>
+                  <strong>세션 컨텍스트 포함</strong>
+                  <span class="muted">notes, plan, recent output 자동 주입</span>
+                </span>
+                <input id="runtime-session-context-toggle" type="checkbox" checked>
+              </label>
+
+              <label class="toggle-row" for="runtime-source-analysis-toggle">
+                <span>
+                  <strong>소스 분석 허용</strong>
+                  <span class="muted">광범위한 파일 탐색, 구조 파악, 리포 훑기 허용</span>
+                </span>
+                <input id="runtime-source-analysis-toggle" type="checkbox" checked>
+              </label>
+
+              <label class="toggle-row" for="runtime-docs-toggle">
+                <span>
+                  <strong>docs/README 읽기 허용</strong>
+                  <span class="muted">README, docs, 설정 설명서까지 자동 탐색 허용</span>
+                </span>
+                <input id="runtime-docs-toggle" type="checkbox" checked>
+              </label>
+
+              <label class="toggle-row" for="runtime-skills-toggle">
+                <span>
+                  <strong>skills 읽기 허용</strong>
+                  <span class="muted">SKILL.md, 에이전트 가이드 같은 보조 지침 탐색 허용</span>
+                </span>
+                <input id="runtime-skills-toggle" type="checkbox" checked>
+              </label>
+
+              <label class="toggle-row" for="runtime-minimal-scan-toggle">
+                <span>
+                  <strong>광범위 스캔 억제</strong>
+                  <span class="muted">필요한 파일 몇 개만 보고 바로 작업하도록 유도</span>
+                </span>
+                <input id="runtime-minimal-scan-toggle" type="checkbox" checked>
+              </label>
+
+              <label class="toggle-row" for="runtime-brief-output-toggle">
+                <span>
+                  <strong>짧은 응답 선호</strong>
+                  <span class="muted">설명과 결과 요약을 짧게 유지하도록 유도</span>
+                </span>
+                <input id="runtime-brief-output-toggle" type="checkbox" checked>
+              </label>
             </div>
 
             <div class="field-row">
@@ -408,6 +952,18 @@
             </div>
 
             <p id="assistant-note" class="muted inline-note">기본 모델은 선택된 CLI 환경설정을 따릅니다.</p>
+
+            <div class="panel-section">
+              <div class="panel-head compact-head">
+                <h3>실행 미리보기</h3>
+                <div class="panel-head-actions">
+                  <span id="prompt-preview-stats" class="muted">아직 계산 전</span>
+                  <button id="refresh-prompt-preview" class="ghost-button" type="button">Preview</button>
+                </div>
+              </div>
+              <p id="prompt-preview-note" class="muted">실행 전 최종 prompt와 대략적인 길이를 확인합니다.</p>
+              <pre id="prompt-preview" class="command-preview compact-console">미리보기 버튼을 누르거나 prompt를 수정하세요.</pre>
+            </div>
           </div>
         </section>
 
@@ -417,6 +973,7 @@
               <h2>Command</h2>
               <div class="panel-head-actions">
                 <span id="job-meta" class="muted">실행 전</span>
+                <button id="output-to-compose" class="ghost-button" type="button">Compose</button>
                 <button id="copy-command-preview" class="ghost-button" type="button">Copy</button>
               </div>
             </div>
@@ -430,6 +987,35 @@
               <button id="copy-final-output" class="ghost-button" type="button">Copy</button>
             </div>
             <pre id="final-output" class="console-output">최종 응답이 여기에 표시됩니다.</pre>
+          </div>
+
+          <div id="parallel-output-panel" class="panel output-panel wide" hidden>
+            <div class="panel-head">
+              <h2>Parallel Run</h2>
+              <span id="parallel-output-summary" class="muted">병렬 실행 상태 없음</span>
+            </div>
+            <div class="parallel-output-layout">
+              <section>
+                <h3>Timeline</h3>
+                <div id="parallel-timeline" class="parallel-timeline">이벤트 없음</div>
+              </section>
+              <section>
+                <h3>Workers</h3>
+                <div id="parallel-workers" class="parallel-workers">워커 없음</div>
+              </section>
+              <section>
+                <h3>Failover</h3>
+                <div id="parallel-failover" class="parallel-failover">전환 이력 없음</div>
+              </section>
+            </div>
+          </div>
+
+          <div id="live-log-panel" class="panel output-panel wide" hidden>
+            <div class="panel-head">
+              <h2>Live Log</h2>
+              <span id="live-log-summary" class="muted">실시간 런처 로그 없음</span>
+            </div>
+            <div id="live-log" class="live-log">실시간 로그가 여기에 표시됩니다.</div>
           </div>
 
           <div class="panel output-panel wide">
